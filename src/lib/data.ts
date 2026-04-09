@@ -18,16 +18,7 @@ export interface City {
   id: string;
   slug: string;
   name: string;
-  tagline: string;
-  description: string;
   imageUrl: string;
-  tips: {
-    bestTime: string;
-    packing: string;
-    etiquette: string;
-    transport: string;
-    phrases: string;
-  };
 }
 
 export const CITIES: City[] = [
@@ -35,46 +26,19 @@ export const CITIES: City[] = [
     id: "c1",
     slug: "casablanca",
     name: "Casablanca",
-    tagline: "Modernity Meets Tradition on the Atlantic Coast",
-    description: "Morocco's economic heart blends Mauresque architecture with a cosmopolitan lifestyle. Discover Art Deco gems, the majestic Hassan II Mosque, and a vibrant coastal energy.",
     imageUrl: "https://images.unsplash.com/photo-1538230575309-59dfc388ae36?q=80&w=874&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    tips: {
-      bestTime: "March to May for pleasant coastal breezes.",
-      packing: "Smart casual wear; modest clothing for mosque visits.",
-      etiquette: "Respect prayer times and ask before photographing people.",
-      transport: "Use the tramway for easy coastal and downtown transit.",
-      phrases: "Salam (Hello), Choukran (Thank you)."
-    }
   },
   {
     id: "c2",
     slug: "rabat",
     name: "Rabat",
-    tagline: "The Quiet Capital of Gardens and Medinas",
-    description: "Rabat offers a relaxed pace with its pristine gardens, historic Kasbah of the Udayas, and tree-lined boulevards overlooking the Atlantic.",
     imageUrl: "https://images.unsplash.com/photo-1598022124758-26d09adcb7b6?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    tips: {
-      bestTime: "April to June when gardens are in full bloom.",
-      packing: "Comfortable walking shoes and light layers.",
-      etiquette: "Public displays of affection should be kept minimal.",
-      transport: "Petit taxis (blue in Rabat) are cheap and metered.",
-      phrases: "Bslama (Goodbye), Afak (Please)."
-    }
   },
   {
     id: "c3",
     slug: "marrakech",
     name: "Marrakech",
-    tagline: "The Red City of Endless Discovery",
-    description: "Lose yourself in the labyrinthine souks, vibrant squares, and tranquil riads of Marrakech. A sensory overload of spices, colors, and sounds.",
     imageUrl: "https://images.unsplash.com/photo-1597212618440-806262de4f6b?w=1200&q=80",
-    tips: {
-      bestTime: "September to November to avoid intense summer heat.",
-      packing: "Light, breathable fabrics; a scarf for dust and sun.",
-      etiquette: "Haggling is expected in souks — do it with a smile.",
-      transport: "Walk the Medina; take a taxi for further distances.",
-      phrases: "La choukran (No thank you — useful in souks)."
-    }
   }
 ];
 

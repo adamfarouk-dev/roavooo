@@ -5,9 +5,11 @@ import { CITIES, PLACES } from '@/lib/data';
 import { PlaceCard } from '@/components/ui/PlaceCard';
 import NotFound from './not-found';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export function City() {
   const { slug } = useParams();
+  const { t } = useLanguage();
   const city = CITIES.find(c => c.slug === slug);
 
   if (!city) return <NotFound />;
@@ -17,55 +19,81 @@ export function City() {
   const activities = cityPlaces.filter(p => p.category === 'activity');
   const restaurants = cityPlaces.filter(p => p.category === 'restaurant');
 
+  const cityContent = t.city.content[city.slug as keyof typeof t.city.content];
+
   return (
     <div className="w-full bg-background pb-24">
-      {/* City Hero */}
       <div className="relative h-[60vh] min-h-[400px]">
         <div className="absolute inset-0">
           <img src={city.imageUrl} alt={city.name} className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-black/40"></div>
         </div>
+
         <div className="relative z-10 max-w-7xl mx-auto px-4 h-full flex flex-col justify-end pb-16">
-          <Link href="/" className="inline-flex items-center gap-2 text-white/80 hover:text-white mb-8 w-fit transition-colors">
-            <ArrowLeft className="w-4 h-4" /> Back to Home
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-white/80 hover:text-white mb-8 w-fit transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" /> {t.city.backToHome}
           </Link>
-          <motion.h1 
+
+          <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-5xl md:text-7xl font-serif font-bold text-white mb-4"
           >
             {city.name}
           </motion.h1>
-          <motion.p 
+
+          <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
             className="text-xl md:text-2xl text-white/90 max-w-2xl font-light"
           >
-            {city.tagline}
+            {cityContent.tagline}
           </motion.p>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-20">
         <div className="bg-card rounded-2xl p-8 shadow-xl border border-border mb-16">
-          <h2 className="text-2xl font-serif font-bold mb-4">About {city.name}</h2>
-          <p className="text-muted-foreground text-lg leading-relaxed">{city.description}</p>
+          <h2 className="text-2xl font-serif font-bold mb-4">
+            {t.city.about} {city.name}
+          </h2>
+          <p className="text-muted-foreground text-lg leading-relaxed">
+            {cityContent.description}
+          </p>
         </div>
 
         <Tabs defaultValue="stays" className="w-full">
-          <TabsList className="mb-8 bg-muted/50 p-1 w-full justify-start overflow-x-auto">
-            <TabsTrigger value="stays" className="px-8 py-3 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all">
-              <Bed className="w-4 h-4 mr-2" /> Stays
+          <TabsList className="mb-8 bg-muted/50 p-1 w-full justify-start">
+            <TabsTrigger
+              value="stays"
+              className="px-8 py-3 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"
+            >
+              <Bed className="w-4 h-4 mr-2" /> {t.city.tabs.stays}
             </TabsTrigger>
-            <TabsTrigger value="activities" className="px-8 py-3 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all">
-              <ActivityIcon className="w-4 h-4 mr-2" /> Experiences
+
+            <TabsTrigger
+              value="activities"
+              className="px-8 py-3 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"
+            >
+              <ActivityIcon className="w-4 h-4 mr-2" /> {t.city.tabs.experiences}
             </TabsTrigger>
-            <TabsTrigger value="restaurants" className="px-8 py-3 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all">
-              <Coffee className="w-4 h-4 mr-2" /> Dining
+
+            <TabsTrigger
+              value="restaurants"
+              className="px-8 py-3 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"
+            >
+              <Coffee className="w-4 h-4 mr-2" /> {t.city.tabs.dining}
             </TabsTrigger>
-            <TabsTrigger value="tips" className="px-8 py-3 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all">
-              <Info className="w-4 h-4 mr-2" /> Travel Tips
+
+            <TabsTrigger
+              value="tips"
+              className="px-8 py-3 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"
+            >
+              <Info className="w-4 h-4 mr-2" /> {t.city.tabs.travelTips}
             </TabsTrigger>
           </TabsList>
 
@@ -90,24 +118,38 @@ export function City() {
           <TabsContent value="tips" className="animate-in fade-in duration-500">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="bg-muted/30 p-8 rounded-2xl border border-border">
-                <h3 className="font-serif text-xl font-bold mb-4 flex items-center gap-2"><Info className="text-primary" /> Best Time to Visit</h3>
-                <p className="text-muted-foreground">{city.tips.bestTime}</p>
+                <h3 className="font-serif text-xl font-bold mb-4 flex items-center gap-2">
+                  <Info className="text-primary" /> {t.city.tips.bestTime}
+                </h3>
+                <p className="text-muted-foreground">{cityContent.tips.bestTime}</p>
               </div>
+
               <div className="bg-muted/30 p-8 rounded-2xl border border-border">
-                <h3 className="font-serif text-xl font-bold mb-4 flex items-center gap-2"><Info className="text-primary" /> What to Pack</h3>
-                <p className="text-muted-foreground">{city.tips.packing}</p>
+                <h3 className="font-serif text-xl font-bold mb-4 flex items-center gap-2">
+                  <Info className="text-primary" /> {t.city.tips.packing}
+                </h3>
+                <p className="text-muted-foreground">{cityContent.tips.packing}</p>
               </div>
+
               <div className="bg-muted/30 p-8 rounded-2xl border border-border">
-                <h3 className="font-serif text-xl font-bold mb-4 flex items-center gap-2"><Info className="text-primary" /> Etiquette</h3>
-                <p className="text-muted-foreground">{city.tips.etiquette}</p>
+                <h3 className="font-serif text-xl font-bold mb-4 flex items-center gap-2">
+                  <Info className="text-primary" /> {t.city.tips.etiquette}
+                </h3>
+                <p className="text-muted-foreground">{cityContent.tips.etiquette}</p>
               </div>
+
               <div className="bg-muted/30 p-8 rounded-2xl border border-border">
-                <h3 className="font-serif text-xl font-bold mb-4 flex items-center gap-2"><Info className="text-primary" /> Getting Around</h3>
-                <p className="text-muted-foreground">{city.tips.transport}</p>
+                <h3 className="font-serif text-xl font-bold mb-4 flex items-center gap-2">
+                  <Info className="text-primary" /> {t.city.tips.transport}
+                </h3>
+                <p className="text-muted-foreground">{cityContent.tips.transport}</p>
               </div>
+
               <div className="bg-muted/30 p-8 rounded-2xl border border-border md:col-span-2">
-                <h3 className="font-serif text-xl font-bold mb-4 flex items-center gap-2"><Info className="text-primary" /> Useful Phrases</h3>
-                <p className="text-muted-foreground">{city.tips.phrases}</p>
+                <h3 className="font-serif text-xl font-bold mb-4 flex items-center gap-2">
+                  <Info className="text-primary" /> {t.city.tips.phrases}
+                </h3>
+                <p className="text-muted-foreground">{cityContent.tips.phrases}</p>
               </div>
             </div>
           </TabsContent>

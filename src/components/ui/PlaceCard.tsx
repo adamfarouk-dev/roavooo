@@ -2,24 +2,23 @@ import { Link } from 'wouter';
 import { Heart, MapPin, Star } from 'lucide-react';
 import { Place } from '@/lib/data';
 import { useFavorites } from '@/hooks/use-favorites';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface PlaceCardProps {
   place: Place;
 }
 
-const CATEGORY_LABELS: Record<string, string> = {
-  stay: 'Stay',
-  activity: 'Experience',
-  restaurant: 'Dining',
-};
-
 export function PlaceCard({ place }: PlaceCardProps) {
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { t } = useLanguage();
   const isFav = isFavorite(place.id);
+
+  const categoryLabel = t.card.category[place.category] ?? place.category;
+  const translatedPlace = t.place.content?.[place.id as keyof typeof t.place.content];
+  const description = translatedPlace?.description ?? place.description;
 
   return (
     <div className="group flex flex-col h-full rounded-2xl overflow-hidden bg-card border border-border/50 hover:border-border hover:-translate-y-1 hover:shadow-2xl transition-all duration-300">
-      {/* Image */}
       <div className="relative aspect-[4/3] overflow-hidden shrink-0">
         <Link href={`/place/${place.id}`} className="block w-full h-full">
           <img
@@ -31,14 +30,12 @@ export function PlaceCard({ place }: PlaceCardProps) {
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
         </Link>
 
-        {/* Category badge */}
         <div className="absolute top-3 left-3">
           <span className="px-2.5 py-1 bg-black/60 backdrop-blur-md text-xs font-semibold rounded-full uppercase tracking-wider text-primary border border-primary/30">
-            {CATEGORY_LABELS[place.category] ?? place.category}
+            {categoryLabel}
           </span>
         </div>
 
-        {/* Favorite button */}
         <button
           onClick={(e) => {
             e.preventDefault();
@@ -59,7 +56,6 @@ export function PlaceCard({ place }: PlaceCardProps) {
         </button>
       </div>
 
-      {/* Content */}
       <div className="flex flex-col flex-grow p-5">
         <div className="flex items-start justify-between gap-3 mb-2">
           <Link href={`/place/${place.id}`} className="flex-1 min-w-0">
@@ -79,7 +75,7 @@ export function PlaceCard({ place }: PlaceCardProps) {
         </div>
 
         <p className="text-muted-foreground text-sm line-clamp-2 leading-relaxed flex-grow mb-4">
-          {place.description}
+          {description}
         </p>
 
         <div className="flex items-center justify-between pt-4 border-t border-border/50 mt-auto">
@@ -87,21 +83,23 @@ export function PlaceCard({ place }: PlaceCardProps) {
             {place.pricePerNight && (
               <span className="font-bold text-foreground text-sm">
                 ${place.pricePerNight}
-                <span className="text-muted-foreground text-xs font-normal ml-1">/ night</span>
+                <span className="text-muted-foreground text-xs font-normal ml-1">
+                  {t.card.perNight}
+                </span>
               </span>
             )}
             {place.priceRange && (
               <span className="font-bold text-primary text-sm">{place.priceRange}</span>
             )}
             {!place.pricePerNight && !place.priceRange && (
-              <span className="text-xs text-muted-foreground">Free to explore</span>
+              <span className="text-xs text-muted-foreground">{t.card.freeToExplore}</span>
             )}
           </div>
           <Link
             href={`/place/${place.id}`}
             className="text-xs font-semibold text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
           >
-            Details <span aria-hidden>→</span>
+            {t.card.details} <span aria-hidden>→</span>
           </Link>
         </div>
       </div>

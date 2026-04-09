@@ -4,17 +4,19 @@ import { PlaceCard } from '@/components/ui/PlaceCard';
 import { Heart } from 'lucide-react';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export function Favorites() {
   const { favorites } = useFavorites();
-  
+  const { t } = useLanguage();
+
   const favoritePlaces = PLACES.filter(p => favorites.includes(p.id));
 
   return (
     <div className="min-h-[70vh] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
       <div className="mb-12">
-        <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4">Your Saved Curations</h1>
-        <p className="text-xl text-muted-foreground">A personal collection of your favorite Moroccan destinations.</p>
+        <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4">{t.favorites.title}</h1>
+        <p className="text-xl text-muted-foreground">{t.favorites.subtitle}</p>
       </div>
 
       {favoritePlaces.length === 0 ? (
@@ -22,13 +24,13 @@ export function Favorites() {
           <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mb-6">
             <Heart className="w-10 h-10 text-muted-foreground/50" />
           </div>
-          <h2 className="text-2xl font-serif font-bold mb-3">No favorites yet</h2>
+          <h2 className="text-2xl font-serif font-bold mb-3">{t.favorites.emptyTitle}</h2>
           <p className="text-muted-foreground mb-8 max-w-md">
-            Start exploring and tap the heart icon to save places you'd love to visit.
+            {t.favorites.emptyMessage}
           </p>
           <Link href="/search">
             <Button size="lg" className="rounded-full px-8 text-lg font-semibold">
-              Explore Destinations
+              {t.favorites.emptyCta}
             </Button>
           </Link>
         </div>

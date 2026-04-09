@@ -5,17 +5,19 @@ import { Search as SearchIcon, MapPin, ArrowRight, Bed, Compass, Utensils } from
 import { CITIES, PLACES } from '@/lib/data';
 import { PlaceCard } from '@/components/ui/PlaceCard';
 import { Input } from '@/components/ui/input';
-
-const CATEGORIES = [
-  { label: 'Stays', value: 'stay', icon: Bed },
-  { label: 'Experiences', value: 'activity', icon: Compass },
-  { label: 'Dining', value: 'restaurant', icon: Utensils },
-];
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export function Home() {
   const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState('stay');
+  const [activeCategory, setActiveCategory] = useState<'stay' | 'activity' | 'restaurant'>('stay');
+  const { t } = useLanguage();
+
+  const CATEGORIES = [
+    { label: t.hero.tabs.stays, value: 'stay' as const, icon: Bed },
+    { label: t.hero.tabs.experiences, value: 'activity' as const, icon: Compass },
+    { label: t.hero.tabs.dining, value: 'restaurant' as const, icon: Utensils },
+  ];
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,7 +51,7 @@ export function Home() {
             transition={{ duration: 0.6 }}
             className="text-primary text-sm font-semibold uppercase tracking-widest mb-5"
           >
-            Morocco Travel, Curated
+            {t.hero.eyebrow}
           </motion.p>
 
           <motion.h1
@@ -58,7 +60,7 @@ export function Home() {
             transition={{ duration: 0.7, delay: 0.1 }}
             className="text-5xl md:text-[4.5rem] font-serif text-white font-bold mb-5 leading-tight tracking-tight"
           >
-            Everything Morocco,<br className="hidden md:block" /> In One Place.
+            {t.hero.headline1}<br className="hidden md:block" /> {t.hero.headline2}
           </motion.h1>
 
           <motion.p
@@ -67,7 +69,7 @@ export function Home() {
             transition={{ duration: 0.7, delay: 0.2 }}
             className="text-lg text-white/75 mb-10 max-w-xl mx-auto leading-relaxed"
           >
-            Find where to stay, what to do, and where to eat — curated across Morocco's most iconic cities.
+            {t.hero.subheadline}
           </motion.p>
 
           {/* Search Card */}
@@ -102,7 +104,7 @@ export function Home() {
                 <MapPin className="absolute left-3 w-4 h-4 text-muted-foreground pointer-events-none" />
                 <Input
                   type="text"
-                  placeholder={`Search ${activeCategory === 'stay' ? 'riads, hotels...' : activeCategory === 'activity' ? 'experiences, tours...' : 'restaurants, cafés...'}`}
+                  placeholder={t.hero.placeholder[activeCategory]}
                   className="w-full pl-10 pr-4 h-11 rounded-xl border-none bg-muted/60 text-sm focus-visible:ring-1 focus-visible:ring-primary placeholder:text-muted-foreground/60"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -113,7 +115,7 @@ export function Home() {
                 className="bg-primary text-primary-foreground px-6 h-11 rounded-xl font-semibold text-sm hover:bg-primary/90 active:scale-95 transition-all flex items-center gap-2 shrink-0"
               >
                 <SearchIcon className="w-4 h-4" />
-                Search
+                {t.hero.searchBtn}
               </button>
             </form>
           </motion.div>
@@ -124,8 +126,8 @@ export function Home() {
       <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="flex justify-between items-end mb-10">
           <div>
-            <p className="text-primary text-xs font-semibold uppercase tracking-widest mb-2">Destinations</p>
-            <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground">Iconic Moroccan Cities</h2>
+            <p className="text-primary text-xs font-semibold uppercase tracking-widest mb-2">{t.home.destinations.eyebrow}</p>
+            <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground">{t.home.destinations.title}</h2>
           </div>
         </div>
 
@@ -143,7 +145,7 @@ export function Home() {
               <img
                 src={city.imageUrl}
                 alt={city.name}
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-108"
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
               <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/10 transition-colors duration-500" />
@@ -153,7 +155,7 @@ export function Home() {
                   {city.tagline}
                 </p>
                 <div className="mt-3 flex items-center gap-1 text-primary text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-400 delay-75">
-                  Explore city <ArrowRight className="w-4 h-4" />
+                  {t.home.destinations.exploreCity} <ArrowRight className="w-4 h-4" />
                 </div>
               </div>
             </motion.div>
@@ -166,12 +168,12 @@ export function Home() {
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-end mb-10">
             <div>
-              <p className="text-primary text-xs font-semibold uppercase tracking-widest mb-2">Where to Sleep</p>
-              <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground">Exceptional Stays</h2>
-              <p className="text-muted-foreground mt-2 max-w-lg">From atmospheric riads to desert camps and five-star palaces.</p>
+              <p className="text-primary text-xs font-semibold uppercase tracking-widest mb-2">{t.home.stays.eyebrow}</p>
+              <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground">{t.home.stays.title}</h2>
+              <p className="text-muted-foreground mt-2 max-w-lg">{t.home.stays.subtitle}</p>
             </div>
             <Link href="/search?category=stay" className="hidden md:flex items-center gap-1.5 text-sm text-primary font-semibold hover:gap-2.5 transition-all">
-              View all <ArrowRight className="w-4 h-4" />
+              {t.home.stays.viewAll} <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
 
@@ -191,7 +193,7 @@ export function Home() {
 
           <div className="mt-8 text-center md:hidden">
             <Link href="/search?category=stay" className="inline-flex items-center gap-2 text-sm text-primary font-semibold border border-primary/40 px-6 py-3 rounded-full hover:bg-primary/5 transition-colors">
-              View all stays <ArrowRight className="w-4 h-4" />
+              {t.home.stays.viewAllMobile} <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
         </div>
@@ -201,12 +203,12 @@ export function Home() {
       <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="flex justify-between items-end mb-10">
           <div>
-            <p className="text-primary text-xs font-semibold uppercase tracking-widest mb-2">Things To Do</p>
-            <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground">Unforgettable Experiences</h2>
-            <p className="text-muted-foreground mt-2 max-w-lg">Hammams, souk tours, cooking classes, and desert adventures.</p>
+            <p className="text-primary text-xs font-semibold uppercase tracking-widest mb-2">{t.home.experiences.eyebrow}</p>
+            <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground">{t.home.experiences.title}</h2>
+            <p className="text-muted-foreground mt-2 max-w-lg">{t.home.experiences.subtitle}</p>
           </div>
           <Link href="/search?category=activity" className="hidden md:flex items-center gap-1.5 text-sm text-primary font-semibold hover:gap-2.5 transition-all">
-            View all <ArrowRight className="w-4 h-4" />
+            {t.home.experiences.viewAll} <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
 
@@ -225,17 +227,17 @@ export function Home() {
         </div>
       </section>
 
-      {/* Restaurants */}
+      {/* Dining */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-card/40 border-y border-border/40">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-end mb-10">
             <div>
-              <p className="text-primary text-xs font-semibold uppercase tracking-widest mb-2">Where to Eat</p>
-              <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground">Dining Highlights</h2>
-              <p className="text-muted-foreground mt-2 max-w-lg">Rooftop restaurants, medina street food, and palace dining experiences.</p>
+              <p className="text-primary text-xs font-semibold uppercase tracking-widest mb-2">{t.home.dining.eyebrow}</p>
+              <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground">{t.home.dining.title}</h2>
+              <p className="text-muted-foreground mt-2 max-w-lg">{t.home.dining.subtitle}</p>
             </div>
             <Link href="/search?category=restaurant" className="hidden md:flex items-center gap-1.5 text-sm text-primary font-semibold hover:gap-2.5 transition-all">
-              View all <ArrowRight className="w-4 h-4" />
+              {t.home.dining.viewAll} <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
 
@@ -255,7 +257,7 @@ export function Home() {
 
           <div className="mt-8 text-center md:hidden">
             <Link href="/search?category=restaurant" className="inline-flex items-center gap-2 text-sm text-primary font-semibold border border-primary/40 px-6 py-3 rounded-full hover:bg-primary/5 transition-colors">
-              View all dining <ArrowRight className="w-4 h-4" />
+              {t.home.dining.viewAllMobile} <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
         </div>
