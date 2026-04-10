@@ -1,17 +1,58 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, Link } from 'wouter';
 import { motion } from 'framer-motion';
 import { Search as SearchIcon, MapPin, ArrowRight, Bed, Compass, Utensils } from 'lucide-react';
-import { CITIES, PLACES } from '@/lib/data';
+import { PLACES } from '@/lib/data';
 import { PlaceCard } from '@/components/ui/PlaceCard';
 import { Input } from '@/components/ui/input';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { supabase } from '@/lib/supabase';
+
+type DbCity = {
+  id: string;
+  slug: string;
+  name: string;
+  image_url: string;
+  tagline_en: string;
+  tagline_fr: string;
+  description_en: string;
+  description_fr: string;
+  tip_best_time_en: string;
+  tip_best_time_fr: string;
+  tip_packing_en: string;
+  tip_packing_fr: string;
+  tip_etiquette_en: string;
+  tip_etiquette_fr: string;
+  tip_transport_en: string;
+  tip_transport_fr: string;
+  tip_phrases_en: string;
+  tip_phrases_fr: string;
+};
 
 export function Home() {
   const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<'stay' | 'activity' | 'restaurant'>('stay');
-  const { t } = useLanguage();
+  const [cities, setCities] = useState<DbCity[]>([]);
+  const { t} = useLanguage();
+
+  useEffect(() => {
+    supabase
+      .from('cities')
+      .select('*')
+      .order('id', { ascending: true })
+      .then(({ data, error }) => {
+        console.log('cities:', data);
+        console.log('cities error:', error);
+
+        if (error) {
+          console.error('Failed to fetch cities:', error);
+          return;
+        }
+
+        setCities((data as DbCity[]) || []);
+      });
+  }, []);
 
   const CATEGORIES = [
     { label: t.hero.tabs.stays, value: 'stay' as const, icon: Bed },
@@ -27,9 +68,9 @@ export function Home() {
     setLocation(`/search?${params.toString()}`);
   };
 
-  const featuredStays = PLACES.filter(p => p.category === 'stay').slice(0, 3);
-  const featuredActivities = PLACES.filter(p => p.category === 'activity').slice(0, 3);
-  const featuredRestaurants = PLACES.filter(p => p.category === 'restaurant').slice(0, 3);
+  const featuredStays = PLACES.filter((p) => p.category === 'stay').slice(0, 3);
+  const featuredActivities = PLACES.filter((p) => p.category === 'activity').slice(0, 3);
+  const featuredRestaurants = PLACES.filter((p) => p.category === 'restaurant').slice(0, 3);
 
   return (
     <div className="w-full">
@@ -60,7 +101,8 @@ export function Home() {
             transition={{ duration: 0.7, delay: 0.1 }}
             className="text-5xl md:text-[4.5rem] font-serif text-white font-bold mb-5 leading-tight tracking-tight"
           >
-            {t.hero.headline1}<br className="hidden md:block" /> {t.hero.headline2}
+            {t.hero.headline1}
+            <br className="hidden md:block" /> {t.hero.headline2}
           </motion.h1>
 
           <motion.p
@@ -126,13 +168,17 @@ export function Home() {
       <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="flex justify-between items-end mb-10">
           <div>
-            <p className="text-primary text-xs font-semibold uppercase tracking-widest mb-2">{t.home.destinations.eyebrow}</p>
-            <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground">{t.home.destinations.title}</h2>
+            <p className="text-primary text-xs font-semibold uppercase tracking-widest mb-2">
+              {t.home.destinations.eyebrow}
+            </p>
+            <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground">
+              {t.home.destinations.title}
+            </h2>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {CITIES.map((city, i) => (
+          {cities.map((city, i) => (
             <motion.div
               key={city.id}
               initial={{ opacity: 0, y: 20 }}
@@ -143,7 +189,7 @@ export function Home() {
               onClick={() => setLocation(`/city/${city.slug}`)}
             >
               <img
-                src={city.imageUrl}
+                src={city.image_url}
                 alt={city.name}
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
               />
@@ -152,7 +198,7 @@ export function Home() {
               <div className="absolute bottom-0 left-0 right-0 p-6">
                 <h3 className="text-2xl font-serif font-bold text-white mb-1">{city.name}</h3>
                 <p className="text-white/70 text-sm line-clamp-2 translate-y-2 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-400">
-                  {city.tagline}
+                  {city.tagline_en}
                 </p>
                 <div className="mt-3 flex items-center gap-1 text-primary text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-400 delay-75">
                   {t.home.destinations.exploreCity} <ArrowRight className="w-4 h-4" />
@@ -168,11 +214,18 @@ export function Home() {
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-end mb-10">
             <div>
-              <p className="text-primary text-xs font-semibold uppercase tracking-widest mb-2">{t.home.stays.eyebrow}</p>
-              <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground">{t.home.stays.title}</h2>
+              <p className="text-primary text-xs font-semibold uppercase tracking-widest mb-2">
+                {t.home.stays.eyebrow}
+              </p>
+              <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground">
+                {t.home.stays.title}
+              </h2>
               <p className="text-muted-foreground mt-2 max-w-lg">{t.home.stays.subtitle}</p>
             </div>
-            <Link href="/search?category=stay" className="hidden md:flex items-center gap-1.5 text-sm text-primary font-semibold hover:gap-2.5 transition-all">
+            <Link
+              href="/search?category=stay"
+              className="hidden md:flex items-center gap-1.5 text-sm text-primary font-semibold hover:gap-2.5 transition-all"
+            >
               {t.home.stays.viewAll} <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
@@ -192,7 +245,10 @@ export function Home() {
           </div>
 
           <div className="mt-8 text-center md:hidden">
-            <Link href="/search?category=stay" className="inline-flex items-center gap-2 text-sm text-primary font-semibold border border-primary/40 px-6 py-3 rounded-full hover:bg-primary/5 transition-colors">
+            <Link
+              href="/search?category=stay"
+              className="inline-flex items-center gap-2 text-sm text-primary font-semibold border border-primary/40 px-6 py-3 rounded-full hover:bg-primary/5 transition-colors"
+            >
               {t.home.stays.viewAllMobile} <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
@@ -203,11 +259,18 @@ export function Home() {
       <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="flex justify-between items-end mb-10">
           <div>
-            <p className="text-primary text-xs font-semibold uppercase tracking-widest mb-2">{t.home.experiences.eyebrow}</p>
-            <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground">{t.home.experiences.title}</h2>
+            <p className="text-primary text-xs font-semibold uppercase tracking-widest mb-2">
+              {t.home.experiences.eyebrow}
+            </p>
+            <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground">
+              {t.home.experiences.title}
+            </h2>
             <p className="text-muted-foreground mt-2 max-w-lg">{t.home.experiences.subtitle}</p>
           </div>
-          <Link href="/search?category=activity" className="hidden md:flex items-center gap-1.5 text-sm text-primary font-semibold hover:gap-2.5 transition-all">
+          <Link
+            href="/search?category=activity"
+            className="hidden md:flex items-center gap-1.5 text-sm text-primary font-semibold hover:gap-2.5 transition-all"
+          >
             {t.home.experiences.viewAll} <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
@@ -232,11 +295,18 @@ export function Home() {
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-end mb-10">
             <div>
-              <p className="text-primary text-xs font-semibold uppercase tracking-widest mb-2">{t.home.dining.eyebrow}</p>
-              <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground">{t.home.dining.title}</h2>
+              <p className="text-primary text-xs font-semibold uppercase tracking-widest mb-2">
+                {t.home.dining.eyebrow}
+              </p>
+              <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground">
+                {t.home.dining.title}
+              </h2>
               <p className="text-muted-foreground mt-2 max-w-lg">{t.home.dining.subtitle}</p>
             </div>
-            <Link href="/search?category=restaurant" className="hidden md:flex items-center gap-1.5 text-sm text-primary font-semibold hover:gap-2.5 transition-all">
+            <Link
+              href="/search?category=restaurant"
+              className="hidden md:flex items-center gap-1.5 text-sm text-primary font-semibold hover:gap-2.5 transition-all"
+            >
               {t.home.dining.viewAll} <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
@@ -256,7 +326,10 @@ export function Home() {
           </div>
 
           <div className="mt-8 text-center md:hidden">
-            <Link href="/search?category=restaurant" className="inline-flex items-center gap-2 text-sm text-primary font-semibold border border-primary/40 px-6 py-3 rounded-full hover:bg-primary/5 transition-colors">
+            <Link
+              href="/search?category=restaurant"
+              className="inline-flex items-center gap-2 text-sm text-primary font-semibold border border-primary/40 px-6 py-3 rounded-full hover:bg-primary/5 transition-colors"
+            >
               {t.home.dining.viewAllMobile} <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
