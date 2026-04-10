@@ -1,4 +1,4 @@
-import { Switch, Route, Router as WouterRouter } from "wouter";
+import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,14 +12,22 @@ import { City } from "@/pages/City";
 import { Place } from "@/pages/Place";
 import { Favorites } from "@/pages/Favorites";
 import { Search } from "@/pages/Search";
+import { AdminLogin } from "@/pages/AdminLogin";
+import { AdminDashboard } from "@/pages/AdminDashboard";
+import { AdminNewPlace } from "@/pages/AdminNewPlace";
+import { AdminEditPlace } from "@/pages/AdminEditPlace";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
 
-function Router() {
+function AppShell() {
+  const [location] = useLocation();
+  const isAdminRoute = location.startsWith("/admin");
+
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background">
-      <Navbar />
+      {!isAdminRoute && <Navbar />}
+
       <main className="flex-grow">
         <Switch>
           <Route path="/" component={Home} />
@@ -27,10 +35,16 @@ function Router() {
           <Route path="/place/:id" component={Place} />
           <Route path="/favorites" component={Favorites} />
           <Route path="/search" component={Search} />
+
+          <Route path="/admin/login" component={AdminLogin} />
+          <Route path="/admin" component={AdminDashboard} />
+          <Route path="/admin/places/new" component={AdminNewPlace} />
+          <Route path="/admin/places/:id/edit" component={AdminEditPlace} />
           <Route component={NotFound} />
         </Switch>
       </main>
-      <Footer />
+
+      {!isAdminRoute && <Footer />}
     </div>
   );
 }
@@ -41,7 +55,7 @@ function App() {
       <TooltipProvider>
         <LanguageProvider>
           <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <Router />
+            <AppShell />
           </WouterRouter>
           <Toaster />
         </LanguageProvider>
