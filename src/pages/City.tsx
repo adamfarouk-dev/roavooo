@@ -46,7 +46,7 @@ type DbPlace = {
 
 export function City() {
   const { slug } = useParams();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [cities, setCities] = useState<DbCity[]>([]);
   const [places, setPlaces] = useState<DbPlace[]>([]);
   const [loading, setLoading] = useState(true);
@@ -85,7 +85,7 @@ export function City() {
     cityId: place.city_id,
     name: place.name,
     category: place.category,
-    description: place.description_en,
+    description: language === 'fr' ? place.description_fr : place.description_en,
     imageUrl: place.image_url,
     location: place.location ?? undefined,
     rating: place.rating,
@@ -99,17 +99,15 @@ export function City() {
   const activities = cityPlaces.filter((p) => p.category === 'activity');
   const restaurants = cityPlaces.filter((p) => p.category === 'restaurant');
 
-  const cityContent = t.city.content?.[city.slug as keyof typeof t.city.content];
-
-  const tagline = cityContent?.tagline ?? city.tagline_en;
-  const description = cityContent?.description ?? city.description_en;
+  const tagline = language === 'fr' ? city.tagline_fr : city.tagline_en;
+  const description = language === 'fr' ? city.description_fr : city.description_en;
 
   const tips = {
-    bestTime: cityContent?.tips?.bestTime ?? city.tip_best_time_en,
-    packing: cityContent?.tips?.packing ?? city.tip_packing_en,
-    etiquette: cityContent?.tips?.etiquette ?? city.tip_etiquette_en,
-    transport: cityContent?.tips?.transport ?? city.tip_transport_en,
-    phrases: cityContent?.tips?.phrases ?? city.tip_phrases_en,
+    bestTime: language === 'fr' ? city.tip_best_time_fr : city.tip_best_time_en,
+    packing: language === 'fr' ? city.tip_packing_fr : city.tip_packing_en,
+    etiquette: language === 'fr' ? city.tip_etiquette_fr : city.tip_etiquette_en,
+    transport: language === 'fr' ? city.tip_transport_fr : city.tip_transport_en,
+    phrases: language === 'fr' ? city.tip_phrases_fr : city.tip_phrases_en,
   };
 
   return (
