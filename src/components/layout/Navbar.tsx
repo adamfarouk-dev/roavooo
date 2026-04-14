@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Menu, X, Search, LogOut, User, Briefcase } from "lucide-react";
+import {
+  Menu,
+  X,
+  Search,
+  LogOut,
+  User,
+  Briefcase,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/lib/supabase";
@@ -36,7 +43,6 @@ export function Navbar() {
 
     if (error) {
       console.error("Logout error:", error);
-      alert(error.message);
       return;
     }
 
@@ -56,6 +62,10 @@ export function Navbar() {
   const isLinkActive = (path: string) => {
     if (path === "/trips") {
       return location === "/trips" || location.startsWith("/trips/");
+    }
+
+    if (path === "/profile") {
+      return location === "/profile";
     }
 
     return location === path;
@@ -129,10 +139,14 @@ export function Navbar() {
               </div>
             ) : (
               <div className="flex items-center gap-3">
-                <div className="hidden lg:flex items-center gap-2 text-sm text-foreground/80">
+                <Link
+                  href="/profile"
+                  className="hidden lg:flex items-center gap-2 text-sm text-foreground/80 hover:text-primary transition-colors"
+                >
                   <User className="w-4 h-4" />
                   <span className="max-w-[180px] truncate">{displayName}</span>
-                </div>
+                </Link>
+
                 <button
                   onClick={handleLogout}
                   className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-semibold text-foreground/80 hover:text-primary hover:border-primary transition-colors"
@@ -231,9 +245,17 @@ export function Navbar() {
                 </>
               ) : (
                 <>
-                  <div className="px-3 py-3 text-sm text-muted-foreground break-all">
-                    {displayName}
-                  </div>
+                  <Link
+                    href="/profile"
+                    onClick={() => setIsOpen(false)}
+                    className="block px-3 py-4 text-base font-medium rounded-md text-foreground/80 hover:text-primary hover:bg-muted"
+                  >
+                    <span className="inline-flex items-center gap-2">
+                      <User className="w-4 h-4" />
+                      {displayName}
+                    </span>
+                  </Link>
+
                   <button
                     onClick={handleLogout}
                     className="w-full text-left px-3 py-4 text-base font-medium rounded-md text-foreground/80 hover:text-primary hover:bg-muted"
