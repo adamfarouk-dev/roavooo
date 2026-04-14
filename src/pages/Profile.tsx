@@ -7,6 +7,11 @@ import {
   Briefcase,
   CalendarDays,
   ArrowRight,
+  Pencil,
+  Save,
+  X,
+  CheckCircle2,
+  AlertCircle,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -16,6 +21,11 @@ type ProfileStats = {
   favoritesCount: number;
 };
 
+type FeedbackMessage = {
+  type: "success" | "error";
+  text: string;
+} | null;
+
 export function Profile() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
@@ -23,6 +33,21 @@ export function Profile() {
     tripsCount: 0,
     favoritesCount: 0,
   });
+
+  const [editing, setEditing] = useState(false);
+  const [username, setUsername] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [feedback, setFeedback] = useState<FeedbackMessage>(null);
+
+  const showFeedback = (type: "success" | "error", text: string) => {
+    setFeedback({ type, text });
+
+    window.clearTimeout((showFeedback as unknown as { timeout?: number }).timeout);
+    (showFeedback as unknown as { timeout?: number }).timeout = window.setTimeout(
+      () => setFeedback(null),
+      2500
+    );
+  };
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -45,6 +70,7 @@ export function Profile() {
       }
 
       setUser(currentUser);
+      setUsername(currentUser.user_metadata?.username || "");
 
       const [tripsRes, favoritesRes] = await Promise.all([
         supabase.from("trips").select("id").eq("user_id", currentUser.id),
@@ -69,6 +95,63 @@ export function Profile() {
 
     fetchProfileData();
   }, []);
+
+  const handleSaveUsername = async () => {
+    const cleanUsername = username.trim();
+
+    if (!cleanUsername) {
+      showFeedback("error", "Username cannot be empty.");
+      return;
+    }
+
+    setSaving(true);
+    setFeedback(null);
+
+    const { data, error } = await supabase.auth.updateUser({
+      data: {
+        username: cleanUsername,
+      },
+    });
+
+    if (error) {
+      console.error("Failed to update username in auth:", error);
+      showFeedback("error", error.message || "Could not update username.");
+      setSaving(false);
+      return;
+    }
+
+    const updatedUser = data.user;
+
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .update({ username: cleanUsername })
+      .eq("id", updatedUser.id);
+
+    if (profileError) {
+      console.error("Failed to update username in profiles:", profileError);
+      setUser(updatedUser);
+      setUsername(updatedUser?.user_metadata?.username || cleanUsername);
+      setEditing(false);
+      setSaving(false);
+      showFeedback(
+        "error",
+        "Username changed in account, but not in profile table."
+      );
+      return;
+    }
+
+    setUser(updatedUser);
+    setUsername(updatedUser?.user_metadata?.username || cleanUsername);
+    setEditing(false);
+    setSaving(false);
+    showFeedback("success", "Username updated successfully.");
+  };
+
+  const handleCancelEdit = () => {
+    setUsername(user?.user_metadata?.username || "");
+    setEditing(false);
+    setFeedback(null);
+  };
 
   if (loading) {
     return <div className="p-6 max-w-5xl mx-auto">Loading...</div>;
@@ -109,6 +192,23 @@ export function Profile() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
+      {feedback && (
+        <div
+          className={`mb-6 rounded-2xl border px-4 py-3 flex items-center gap-3 ${
+            feedback.type === "success"
+              ? "border-green-500/30 bg-green-500/10 text-green-400"
+              : "border-red-500/30 bg-red-500/10 text-red-400"
+          }`}
+        >
+          {feedback.type === "success" ? (
+            <CheckCircle2 className="w-5 h-5 shrink-0" />
+          ) : (
+            <AlertCircle className="w-5 h-5 shrink-0" />
+          )}
+          <span>{feedback.text}</span>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1">
           <div className="rounded-3xl border border-border bg-card p-6">
@@ -116,17 +216,54 @@ export function Profile() {
               <User className="w-10 h-10 text-primary" />
             </div>
 
-            <h1 className="text-2xl font-bold mb-1">{displayName}</h1>
+            {!editing ? (
+              <>
+                <h1 className="text-2xl font-bold mb-1">{displayName}</h1>
 
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
-              <Mail className="w-4 h-4" />
-              <span className="break-all">{user.email}</span>
-            </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+                  <Mail className="w-4 h-4" />
+                  <span className="break-all">{user.email}</span>
+                </div>
 
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <CalendarDays className="w-4 h-4" />
-              <span>Joined {joinedDate}</span>
-            </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-5">
+                  <CalendarDays className="w-4 h-4" />
+                  <span>Joined {joinedDate}</span>
+                </div>
+
+                <Button variant="outline" onClick={() => setEditing(true)}>
+                  <Pencil className="w-4 h-4 mr-2" />
+                  Edit username
+                </Button>
+              </>
+            ) : (
+              <>
+                <label className="block text-sm font-medium mb-2">Username</label>
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Enter a username"
+                  className="w-full p-3 rounded-lg bg-muted border border-border outline-none mb-4"
+                />
+
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-5">
+                  <Mail className="w-4 h-4" />
+                  <span className="break-all">{user.email}</span>
+                </div>
+
+                <div className="flex gap-3">
+                  <Button onClick={handleSaveUsername} disabled={saving}>
+                    <Save className="w-4 h-4 mr-2" />
+                    {saving ? "Saving..." : "Save"}
+                  </Button>
+
+                  <Button variant="outline" onClick={handleCancelEdit}>
+                    <X className="w-4 h-4 mr-2" />
+                    Cancel
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
