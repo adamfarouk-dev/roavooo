@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
-import { MapPin, CalendarDays, Plus } from "lucide-react";
+import { MapPin, CalendarDays, Plus, FolderOpen } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 type Trip = {
@@ -20,6 +20,10 @@ type City = {
   name: string;
 };
 
+type TripPlaceCount = {
+  trip_id: string;
+};
+
 export function Trips() {
   const [, setLocation] = useLocation();
 
@@ -27,6 +31,9 @@ export function Trips() {
   const [cities, setCities] = useState<City[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [tripPlaceCounts, setTripPlaceCounts] = useState<Record<string, number>>(
+    {}
+  );
 
   const [title, setTitle] = useState("");
   const [cityId, setCityId] = useState("");
@@ -54,13 +61,19 @@ export function Trips() {
       return;
     }
 
-    const [tripsRes, citiesRes] = await Promise.all([
+    const [tripsRes, citiesRes, tripPlacesRes] = await Promise.all([
       supabase
         .from("trips")
         .select("*")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false }),
-      supabase.from("cities").select("id, slug, name").order("name", { ascending: true }),
+      supabase
+        .from("cities")
+        .select("id, slug, name")
+        .order("name", { ascending: true }),
+      supabase
+        .from("trip_places")
+        .select("trip_id"),
     ]);
 
     if (tripsRes.error) {
@@ -73,6 +86,18 @@ export function Trips() {
       console.error("Error fetching cities:", citiesRes.error);
     } else {
       setCities((citiesRes.data as City[]) || []);
+    }
+
+    if (tripPlacesRes.error) {
+      console.error("Error fetching trip places:", tripPlacesRes.error);
+    } else {
+      const counts: Record<string, number> = {};
+
+      ((tripPlacesRes.data as TripPlaceCount[]) || []).forEach((item) => {
+        counts[item.trip_id] = (counts[item.trip_id] || 0) + 1;
+      });
+
+      setTripPlaceCounts(counts);
     }
 
     setLoading(false);
@@ -167,6 +192,7 @@ export function Trips() {
         <div className="space-y-4 mb-10">
           {trips.map((trip) => {
             const city = trip.city_id ? cityMap[trip.city_id] : null;
+            const placesCount = tripPlaceCounts[trip.id] || 0;
 
             return (
               <div
@@ -178,12 +204,21 @@ export function Trips() {
                   <div>
                     <h2 className="font-semibold text-xl">{trip.title}</h2>
 
-                    {city && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
-                        <MapPin className="w-4 h-4 text-primary" />
-                        <span>{city.name}</span>
+                    <div className="flex flex-wrap items-center gap-4 mt-2">
+                      {city && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <MapPin className="w-4 h-4 text-primary" />
+                          <span>{city.name}</span>
+                        </div>
+                      )}
+
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <FolderOpen className="w-4 h-4 text-primary" />
+                        <span>
+                          {placesCount} {placesCount === 1 ? "place" : "places"} saved
+                        </span>
                       </div>
-                    )}
+                    </div>
 
                     {(trip.start_date || trip.end_date) && (
                       <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">

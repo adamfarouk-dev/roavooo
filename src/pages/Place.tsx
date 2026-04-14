@@ -7,8 +7,10 @@ import {
   ArrowLeft,
   Share2,
   FolderPlus,
-  Check,
   X,
+  CheckCircle2,
+  AlertCircle,
+  Check,
 } from "lucide-react";
 import { useFavorites } from "@/hooks/use-favorites";
 import { Button } from "@/components/ui/button";
@@ -44,6 +46,15 @@ type Trip = {
   title: string;
 };
 
+type SaveStatus = {
+  type: "success" | "error" | "info";
+  message: string;
+} | null;
+
+type TripPlaceRow = {
+  trip_id: string;
+};
+
 export function Place() {
   const { id } = useParams();
   const { isFavorite, toggleFavorite } = useFavorites();
@@ -55,7 +66,10 @@ export function Place() {
 
   const [userTrips, setUserTrips] = useState<Trip[]>([]);
   const [savingToTrip, setSavingToTrip] = useState(false);
-  const [showTripPicker, setShowTripPicker] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>(null);
+  const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
+  const [tripPlaceMap, setTripPlaceMap] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const fetchData = async () => {
@@ -82,42 +96,105 @@ export function Place() {
     fetchData();
   }, []);
 
+  const closeModal = () => {
+    setModalOpen(false);
+    setSaveStatus(null);
+    setSelectedTripId(null);
+    setTripPlaceMap({});
+    setUserTrips([]);
+    setSavingToTrip(false);
+  };
+
   const fetchUserTrips = async () => {
+    setSaveStatus(null);
+    setSelectedTripId(null);
+    setTripPlaceMap({});
+    setUserTrips([]);
+    setModalOpen(true);
+
     const { data: userData, error: userError } = await supabase.auth.getUser();
 
     if (userError) {
       console.error("Failed to get user:", userError);
-      alert("Could not get user.");
+      setSaveStatus({
+        type: "error",
+        message: "Could not get user.",
+      });
       return;
     }
 
     const user = userData.user;
 
     if (!user) {
-      alert("You must be logged in to save a place to a trip.");
+      setSaveStatus({
+        type: "error",
+        message: "You must be logged in to save a place to a trip.",
+      });
       return;
     }
 
-    const { data, error } = await supabase
-      .from("trips")
-      .select("id, title")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      console.error("Failed to fetch trips:", error);
-      alert("Could not load your trips.");
+    if (!id) {
+      setSaveStatus({
+        type: "error",
+        message: "Could not identify this place.",
+      });
       return;
     }
 
-    setUserTrips((data as Trip[]) || []);
-    setShowTripPicker(true);
+    const [tripsRes, tripPlacesRes] = await Promise.all([
+      supabase
+        .from("trips")
+        .select("id, title")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false }),
+
+      supabase.from("trip_places").select("trip_id").eq("place_id", id),
+    ]);
+
+    if (tripsRes.error) {
+      console.error("Failed to fetch trips:", tripsRes.error);
+      setSaveStatus({
+        type: "error",
+        message: "Could not load your trips.",
+      });
+      return;
+    }
+
+    if (tripPlacesRes.error) {
+      console.error("Failed to fetch trip places:", tripPlacesRes.error);
+      setSaveStatus({
+        type: "error",
+        message: "Could not check existing saved trips.",
+      });
+      return;
+    }
+
+    const trips = (tripsRes.data as Trip[]) || [];
+    const tripPlaces = (tripPlacesRes.data as TripPlaceRow[]) || [];
+
+    const map: Record<string, boolean> = {};
+    tripPlaces.forEach((item) => {
+      map[item.trip_id] = true;
+    });
+
+    setTripPlaceMap(map);
+    setUserTrips(trips);
+
+    if (trips.length === 0) {
+      setSaveStatus({
+        type: "info",
+        message: "You do not have any trips yet. Create one first.",
+      });
+    }
   };
 
   const handleSaveToTrip = async (tripId: string) => {
     if (!id) return;
+    if (tripPlaceMap[tripId]) return;
 
     setSavingToTrip(true);
+    setSaveStatus(null);
+    setSelectedTripId(tripId);
 
     const { error } = await supabase.from("trip_places").insert({
       trip_id: tripId,
@@ -134,18 +211,36 @@ export function Place() {
         message.includes("unique") ||
         message.includes("trip_places_trip_id_place_id_key")
       ) {
-        alert("This place is already in that trip.");
+        setSaveStatus({
+          type: "error",
+          message: "This place is already in that trip.",
+        });
       } else {
-        alert("Could not save this place to the trip.");
+        setSaveStatus({
+          type: "error",
+          message: "Could not save this place to the trip.",
+        });
       }
 
       setSavingToTrip(false);
       return;
     }
 
-    alert("Place added to trip successfully.");
+    setTripPlaceMap((prev) => ({
+      ...prev,
+      [tripId]: true,
+    }));
+
+    setSaveStatus({
+      type: "success",
+      message: "Place added to trip successfully.",
+    });
+
     setSavingToTrip(false);
-    setShowTripPicker(false);
+
+    setTimeout(() => {
+      closeModal();
+    }, 1200);
   };
 
   if (loading) {
@@ -318,42 +413,6 @@ export function Place() {
               Save to Trip
             </Button>
 
-            {showTripPicker && (
-              <div className="mt-4 border border-border rounded-2xl p-4 bg-background/50">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-semibold">Choose a trip</h4>
-
-                  <button
-                    onClick={() => setShowTripPicker(false)}
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                    type="button"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-
-                {userTrips.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    You do not have any trips yet. Create one first.
-                  </p>
-                ) : (
-                  <div className="space-y-2">
-                    {userTrips.map((trip) => (
-                      <button
-                        key={trip.id}
-                        onClick={() => handleSaveToTrip(trip.id)}
-                        disabled={savingToTrip}
-                        className="w-full text-left px-4 py-3 rounded-xl border border-border hover:bg-muted transition-colors disabled:opacity-60"
-                        type="button"
-                      >
-                        {trip.title}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
             <p className="text-center text-sm text-muted-foreground">
               {t.place.noCharge}
             </p>
@@ -384,6 +443,116 @@ export function Place() {
             {relatedPlaces.map((p) => (
               <PlaceCard key={p.id} place={p} />
             ))}
+          </div>
+        </div>
+      )}
+
+      {modalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/50"
+            onClick={closeModal}
+          />
+
+          <div className="relative z-10 w-full max-w-md rounded-3xl border border-border bg-card shadow-2xl p-5 md:p-6">
+            <div className="flex items-start justify-between gap-4 mb-5">
+              <div>
+                <h3 className="text-xl font-semibold">Save to Trip</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {dbPlace.name}
+                </p>
+              </div>
+
+              <button
+                onClick={closeModal}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+                type="button"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {saveStatus && (
+              <div
+                className={`mb-4 rounded-xl border px-3 py-2 text-sm flex items-center gap-2 ${
+                  saveStatus.type === "success"
+                    ? "border-green-500/30 bg-green-500/10 text-green-400"
+                    : saveStatus.type === "error"
+                    ? "border-red-500/30 bg-red-500/10 text-red-400"
+                    : "border-border bg-muted text-muted-foreground"
+                }`}
+              >
+                {saveStatus.type === "success" ? (
+                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                ) : saveStatus.type === "error" ? (
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                ) : (
+                  <FolderPlus className="w-4 h-4 shrink-0" />
+                )}
+                <span>{saveStatus.message}</span>
+              </div>
+            )}
+
+            {userTrips.length === 0 ? (
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  You do not have any trips yet. Create one first.
+                </p>
+                <Link
+                  href="/trips"
+                  className="inline-flex text-sm font-medium text-primary hover:opacity-80"
+                >
+                  Go to trips
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-[50vh] overflow-y-auto pr-1">
+                {userTrips.map((trip) => {
+                  const alreadyAdded = tripPlaceMap[trip.id];
+
+                  return (
+                    <button
+                      key={trip.id}
+                      onClick={() => !alreadyAdded && handleSaveToTrip(trip.id)}
+                      disabled={savingToTrip || alreadyAdded}
+                      className={`w-full text-left px-4 py-3 rounded-xl border transition-colors disabled:opacity-60 ${
+                        alreadyAdded
+                          ? "border-border bg-muted text-muted-foreground cursor-not-allowed"
+                          : selectedTripId === trip.id
+                          ? "border-primary bg-primary/10"
+                          : "border-border hover:bg-muted"
+                      }`}
+                      type="button"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <span>{trip.title}</span>
+
+                        {alreadyAdded ? (
+                          <span className="inline-flex items-center gap-1 text-xs text-primary font-medium">
+                            <Check className="w-3.5 h-3.5" />
+                            Already added
+                          </span>
+                        ) : savingToTrip && selectedTripId === trip.id ? (
+                          <span className="text-xs text-muted-foreground">
+                            Saving...
+                          </span>
+                        ) : null}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {saveStatus?.type === "success" && (
+              <Link
+                href="/trips"
+                className="inline-flex mt-4 text-sm font-medium text-primary hover:opacity-80"
+              >
+                View my trips
+              </Link>
+            )}
           </div>
         </div>
       )}
