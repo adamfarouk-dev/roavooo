@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import {
   MapPin,
@@ -67,18 +67,37 @@ export function Trips() {
   const [endDate, setEndDate] = useState("");
   const [notes, setNotes] = useState("");
 
+  const feedbackTimeoutRef = useRef<number | null>(null);
+
   const cityMap = useMemo(() => {
     return Object.fromEntries(cities.map((city) => [city.id, city]));
   }, [cities]);
 
+  const clearFeedbackTimer = () => {
+    if (feedbackTimeoutRef.current) {
+      window.clearTimeout(feedbackTimeoutRef.current);
+      feedbackTimeoutRef.current = null;
+    }
+  };
+
   const showFeedback = (type: "success" | "error", text: string) => {
     setFeedback({ type, text });
+    clearFeedbackTimer();
 
-    window.clearTimeout((showFeedback as unknown as { timeout?: number }).timeout);
-    (showFeedback as unknown as { timeout?: number }).timeout = window.setTimeout(
-      () => setFeedback(null),
-      2500
-    );
+    feedbackTimeoutRef.current = window.setTimeout(() => {
+      setFeedback(null);
+      feedbackTimeoutRef.current = null;
+    }, 2500);
+  };
+
+  const formatDate = (value: string | null) => {
+    if (!value) return null;
+
+    return new Date(value).toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   };
 
   const fetchTrips = async () => {
@@ -158,6 +177,10 @@ export function Trips() {
 
   useEffect(() => {
     fetchTrips();
+
+    return () => {
+      clearFeedbackTimer();
+    };
   }, []);
 
   const resetForm = () => {
@@ -267,6 +290,8 @@ export function Trips() {
             const city = trip.city_id ? cityMap[trip.city_id] : null;
             const placesCount = tripPlaceCounts[trip.id] || 0;
             const coverImage = tripCoverImages[trip.id] || city?.image_url || null;
+            const formattedStartDate = formatDate(trip.start_date);
+            const formattedEndDate = formatDate(trip.end_date);
 
             return (
               <div
@@ -317,8 +342,8 @@ export function Trips() {
                     <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
                       <CalendarDays className="w-4 h-4 text-primary" />
                       <span>
-                        {trip.start_date || "No start date"} →{" "}
-                        {trip.end_date || "No end date"}
+                        {formattedStartDate || "No start date"} →{" "}
+                        {formattedEndDate || "No end date"}
                       </span>
                     </div>
                   )}
@@ -335,7 +360,7 @@ export function Trips() {
 
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>
-                      Created {new Date(trip.created_at).toLocaleDateString()}
+                      Created {formatDate(trip.created_at) || "Unknown date"}
                     </span>
                     <span className="text-primary font-medium">Open trip →</span>
                   </div>
