@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
-import { MapPin, CalendarDays, Plus, FolderOpen } from "lucide-react";
+import {
+  MapPin,
+  CalendarDays,
+  Plus,
+  FolderOpen,
+  Image as ImageIcon,
+  CheckCircle2,
+  AlertCircle,
+} from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 type Trip = {
@@ -18,11 +26,25 @@ type City = {
   id: string;
   slug: string;
   name: string;
+  image_url: string;
 };
 
-type TripPlaceCount = {
+type TripPlaceRow = {
   trip_id: string;
+  places:
+    | {
+        image_url: string | null;
+      }
+    | {
+        image_url: string | null;
+      }[]
+    | null;
 };
+
+type FeedbackMessage = {
+  type: "success" | "error";
+  text: string;
+} | null;
 
 export function Trips() {
   const [, setLocation] = useLocation();
@@ -34,6 +56,10 @@ export function Trips() {
   const [tripPlaceCounts, setTripPlaceCounts] = useState<Record<string, number>>(
     {}
   );
+  const [tripCoverImages, setTripCoverImages] = useState<Record<string, string>>(
+    {}
+  );
+  const [feedback, setFeedback] = useState<FeedbackMessage>(null);
 
   const [title, setTitle] = useState("");
   const [cityId, setCityId] = useState("");
@@ -44,6 +70,16 @@ export function Trips() {
   const cityMap = useMemo(() => {
     return Object.fromEntries(cities.map((city) => [city.id, city]));
   }, [cities]);
+
+  const showFeedback = (type: "success" | "error", text: string) => {
+    setFeedback({ type, text });
+
+    window.clearTimeout((showFeedback as unknown as { timeout?: number }).timeout);
+    (showFeedback as unknown as { timeout?: number }).timeout = window.setTimeout(
+      () => setFeedback(null),
+      2500
+    );
+  };
 
   const fetchTrips = async () => {
     const { data: userData, error: userError } = await supabase.auth.getUser();
@@ -67,13 +103,18 @@ export function Trips() {
         .select("*")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false }),
+
       supabase
         .from("cities")
-        .select("id, slug, name")
+        .select("id, slug, name, image_url")
         .order("name", { ascending: true }),
-      supabase
-        .from("trip_places")
-        .select("trip_id"),
+
+      supabase.from("trip_places").select(`
+        trip_id,
+        places (
+          image_url
+        )
+      `),
     ]);
 
     if (tripsRes.error) {
@@ -92,12 +133,24 @@ export function Trips() {
       console.error("Error fetching trip places:", tripPlacesRes.error);
     } else {
       const counts: Record<string, number> = {};
+      const covers: Record<string, string> = {};
 
-      ((tripPlacesRes.data as TripPlaceCount[]) || []).forEach((item) => {
+      ((tripPlacesRes.data as TripPlaceRow[]) || []).forEach((item) => {
         counts[item.trip_id] = (counts[item.trip_id] || 0) + 1;
+
+        if (!covers[item.trip_id]) {
+          const placeData = Array.isArray(item.places)
+            ? item.places[0]
+            : item.places;
+
+          if (placeData?.image_url) {
+            covers[item.trip_id] = placeData.image_url;
+          }
+        }
       });
 
       setTripPlaceCounts(counts);
+      setTripCoverImages(covers);
     }
 
     setLoading(false);
@@ -120,22 +173,23 @@ export function Trips() {
     const cleanNotes = notes.trim();
 
     if (!cleanTitle) {
-      alert("Please enter a trip title.");
+      showFeedback("error", "Please enter a trip title.");
       return;
     }
 
     if (startDate && endDate && startDate > endDate) {
-      alert("End date must be after start date.");
+      showFeedback("error", "End date must be after start date.");
       return;
     }
 
     setCreating(true);
+    setFeedback(null);
 
     const { data: userData, error: userError } = await supabase.auth.getUser();
 
     if (userError) {
       console.error("Error fetching user:", userError);
-      alert("Could not get user.");
+      showFeedback("error", "Could not get user.");
       setCreating(false);
       return;
     }
@@ -143,7 +197,7 @@ export function Trips() {
     const user = userData.user;
 
     if (!user) {
-      alert("You must be logged in to create a trip.");
+      showFeedback("error", "You must be logged in to create a trip.");
       setCreating(false);
       return;
     }
@@ -159,7 +213,7 @@ export function Trips() {
 
     if (error) {
       console.error("Error creating trip:", error);
-      alert("Error creating trip.");
+      showFeedback("error", "Could not create trip.");
       setCreating(false);
       return;
     }
@@ -167,14 +221,15 @@ export function Trips() {
     resetForm();
     await fetchTrips();
     setCreating(false);
+    showFeedback("success", "Trip created successfully.");
   };
 
   if (loading) {
-    return <div className="p-6 max-w-5xl mx-auto">Loading...</div>;
+    return <div className="p-6 max-w-6xl mx-auto">Loading...</div>;
   }
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
+    <div className="p-6 max-w-6xl mx-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">My Trips</h1>
         <p className="text-muted-foreground">
@@ -182,63 +237,107 @@ export function Trips() {
         </p>
       </div>
 
+      {feedback && (
+        <div
+          className={`mb-6 rounded-2xl border px-4 py-3 flex items-center gap-3 ${
+            feedback.type === "success"
+              ? "border-green-500/30 bg-green-500/10 text-green-400"
+              : "border-red-500/30 bg-red-500/10 text-red-400"
+          }`}
+        >
+          {feedback.type === "success" ? (
+            <CheckCircle2 className="w-5 h-5 shrink-0" />
+          ) : (
+            <AlertCircle className="w-5 h-5 shrink-0" />
+          )}
+          <span>{feedback.text}</span>
+        </div>
+      )}
+
       {trips.length === 0 ? (
-        <div className="rounded-xl border border-border p-6 bg-card mb-8">
+        <div className="rounded-2xl border border-border bg-card p-8 mb-8">
+          <h2 className="text-xl font-semibold mb-2">No trips yet</h2>
           <p className="text-muted-foreground">
-            No trips yet. Create your first trip below.
+            Create your first trip below and start building your itinerary.
           </p>
         </div>
       ) : (
-        <div className="space-y-4 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
           {trips.map((trip) => {
             const city = trip.city_id ? cityMap[trip.city_id] : null;
             const placesCount = tripPlaceCounts[trip.id] || 0;
+            const coverImage = tripCoverImages[trip.id] || city?.image_url || null;
 
             return (
               <div
                 key={trip.id}
                 onClick={() => setLocation(`/trips/${trip.id}`)}
-                className="p-5 border border-border rounded-2xl bg-card cursor-pointer hover:opacity-90 transition-opacity"
+                className="rounded-3xl overflow-hidden border border-border bg-card cursor-pointer hover:translate-y-[-2px] hover:shadow-xl transition-all"
               >
-                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                  <div>
-                    <h2 className="font-semibold text-xl">{trip.title}</h2>
+                <div className="relative h-56 bg-muted">
+                  {coverImage ? (
+                    <img
+                      src={coverImage}
+                      alt={trip.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                      <ImageIcon className="w-10 h-10" />
+                    </div>
+                  )}
 
-                    <div className="flex flex-wrap items-center gap-4 mt-2">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+
+                  <div className="absolute bottom-4 left-4 right-4">
+                    <h2 className="text-2xl font-semibold text-white mb-2">
+                      {trip.title}
+                    </h2>
+
+                    <div className="flex flex-wrap items-center gap-3 text-white/90 text-sm">
                       {city && (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <MapPin className="w-4 h-4 text-primary" />
+                        <div className="inline-flex items-center gap-1.5">
+                          <MapPin className="w-4 h-4" />
                           <span>{city.name}</span>
                         </div>
                       )}
 
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <FolderOpen className="w-4 h-4 text-primary" />
+                      <div className="inline-flex items-center gap-1.5">
+                        <FolderOpen className="w-4 h-4" />
                         <span>
-                          {placesCount} {placesCount === 1 ? "place" : "places"} saved
+                          {placesCount} {placesCount === 1 ? "place" : "places"}
                         </span>
                       </div>
                     </div>
-
-                    {(trip.start_date || trip.end_date) && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
-                        <CalendarDays className="w-4 h-4 text-primary" />
-                        <span>
-                          {trip.start_date || "No start date"} →{" "}
-                          {trip.end_date || "No end date"}
-                        </span>
-                      </div>
-                    )}
-
-                    {trip.notes && (
-                      <p className="text-sm text-muted-foreground mt-3 line-clamp-2">
-                        {trip.notes}
-                      </p>
-                    )}
                   </div>
+                </div>
 
-                  <div className="text-xs text-muted-foreground shrink-0">
-                    {new Date(trip.created_at).toLocaleDateString()}
+                <div className="p-5">
+                  {(trip.start_date || trip.end_date) && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+                      <CalendarDays className="w-4 h-4 text-primary" />
+                      <span>
+                        {trip.start_date || "No start date"} →{" "}
+                        {trip.end_date || "No end date"}
+                      </span>
+                    </div>
+                  )}
+
+                  {trip.notes ? (
+                    <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
+                      {trip.notes}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground/70 italic mb-4">
+                      No trip notes yet.
+                    </p>
+                  )}
+
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>
+                      Created {new Date(trip.created_at).toLocaleDateString()}
+                    </span>
+                    <span className="text-primary font-medium">Open trip →</span>
                   </div>
                 </div>
               </div>
@@ -247,7 +346,7 @@ export function Trips() {
         </div>
       )}
 
-      <div className="rounded-2xl border border-border bg-card p-5 md:p-6">
+      <div className="rounded-3xl border border-border bg-card p-5 md:p-6">
         <div className="flex items-center gap-2 mb-5">
           <Plus className="w-5 h-5 text-primary" />
           <h2 className="text-xl font-semibold">Create a new trip</h2>
