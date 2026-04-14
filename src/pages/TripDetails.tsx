@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useLocation } from "wouter";
+import { Link, useLocation, useRoute } from "wouter";
 import {
   ArrowLeft,
   MapPin,
@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Info,
+  FolderOpen,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -63,8 +64,9 @@ type FeedbackMessage = {
 } | null;
 
 export function TripDetails() {
-  const [location, setLocation] = useLocation();
-  const tripId = location.split("/trips/")[1];
+  const [, setLocation] = useLocation();
+  const [, params] = useRoute("/trips/:id");
+  const tripId = params?.id;
 
   const [trip, setTrip] = useState<Trip | null>(null);
   const [places, setPlaces] = useState<TripPlaceRow[]>([]);
@@ -94,6 +96,18 @@ export function TripDetails() {
     return Object.fromEntries(cities.map((city) => [city.id, city]));
   }, [cities]);
 
+  const groupedPlaces = useMemo(() => {
+    return {
+      stay: places.filter((item) => item.place?.category === "stay"),
+      activity: places.filter((item) => item.place?.category === "activity"),
+      restaurant: places.filter((item) => item.place?.category === "restaurant"),
+    };
+  }, [places]);
+
+  const notesCount = useMemo(() => {
+    return places.filter((item) => (item.note || "").trim().length > 0).length;
+  }, [places]);
+
   const showFeedback = (
     type: "success" | "error" | "info",
     text: string,
@@ -118,7 +132,22 @@ export function TripDetails() {
     setNotes(tripData.notes || "");
   };
 
+  const formatDate = (value: string | null) => {
+    if (!value) return null;
+
+    return new Date(value).toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
   const fetchTripDetails = async () => {
+    if (!tripId) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
 
     const [tripRes, placesRes, citiesRes] = await Promise.all([
@@ -392,15 +421,215 @@ export function TripDetails() {
     showFeedback("success", "Note deleted.");
   };
 
+  const renderPlaceCard = (item: TripPlaceRow) => {
+    const place = item.place;
+
+    if (!place) {
+      return (
+        <div
+          key={item.id}
+          className="rounded-2xl border border-border bg-card p-4"
+        >
+          <p className="text-muted-foreground">
+            This place could not be loaded.
+          </p>
+        </div>
+      );
+    }
+
+    const currentNote = noteValues[item.id] ?? "";
+    const savedNote = savedNoteValues[item.id] ?? "";
+    const isChanged = currentNote !== savedNote;
+    const hasSavedNote = savedNote.trim().length > 0;
+
+    return (
+      <div
+        key={item.id}
+        className="rounded-2xl border border-border bg-card overflow-hidden"
+      >
+        <Link href={`/place/${place.id}`}>
+          <img
+            src={place.image_url}
+            alt={place.name}
+            className="w-full h-52 object-cover cursor-pointer"
+          />
+        </Link>
+
+        <div className="p-4">
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <div>
+              <Link href={`/place/${place.id}`}>
+                <h2 className="text-xl font-semibold hover:text-primary transition-colors cursor-pointer">
+                  {place.name}
+                </h2>
+              </Link>
+
+              <p className="text-sm text-muted-foreground capitalize mt-1">
+                {place.category}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-1 text-sm font-semibold bg-muted px-2.5 py-1.5 rounded-lg shrink-0">
+              <Star className="w-4 h-4 fill-accent text-accent" />
+              <span>{place.rating}</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+            <MapPin className="w-4 h-4 text-primary" />
+            <span>{place.location || "No location"}</span>
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-2">
+              Notes
+            </label>
+            <textarea
+              value={currentNote}
+              onChange={(e) =>
+                setNoteValues((prev) => ({
+                  ...prev,
+                  [item.id]: e.target.value,
+                }))
+              }
+              placeholder="Add a note for this place..."
+              rows={3}
+              className="w-full rounded-xl border border-border bg-muted p-3 outline-none resize-none"
+            />
+          </div>
+
+          <div className="flex gap-3">
+            <Button
+              onClick={() => handleSaveNote(item.id)}
+              disabled={savingNoteId === item.id || !isChanged}
+              className="flex-1"
+            >
+              {savingNoteId === item.id ? (
+                "Saving..."
+              ) : savedNoteId === item.id ? (
+                <>
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  Saved
+                </>
+              ) : hasSavedNote ? (
+                isChanged ? "Save changes" : "Saved"
+              ) : (
+                "Save note"
+              )}
+            </Button>
+
+            {hasSavedNote ? (
+              <Button
+                variant="outline"
+                onClick={() => handleDeleteNote(item.id)}
+                disabled={savingNoteId === item.id}
+                className="flex-1"
+              >
+                Delete note
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                onClick={() => handleRemovePlace(item.id)}
+                disabled={removingId === item.id}
+                className="flex-1"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                {removingId === item.id ? "Removing..." : "Remove"}
+              </Button>
+            )}
+          </div>
+
+          {hasSavedNote && (
+            <Button
+              variant="ghost"
+              onClick={() => handleRemovePlace(item.id)}
+              disabled={removingId === item.id}
+              className="w-full mt-2"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              {removingId === item.id
+                ? "Removing..."
+                : "Remove place from trip"}
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderPlaceSection = (title: string, items: TripPlaceRow[]) => {
+    if (items.length === 0) return null;
+
+    return (
+      <section className="mb-10">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-xl font-semibold">{title}</h2>
+          <span className="text-sm text-muted-foreground">
+            {items.length} {items.length === 1 ? "place" : "places"}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {items.map(renderPlaceCard)}
+        </div>
+      </section>
+    );
+  };
+
   if (loading) {
-    return <div className="p-6 max-w-6xl mx-auto">Loading...</div>;
+    return (
+      <div className="p-6 max-w-6xl mx-auto">
+        <div className="animate-pulse rounded-2xl border border-border bg-card p-6 mb-8">
+          <div className="h-8 w-56 bg-muted rounded mb-4" />
+          <div className="h-5 w-40 bg-muted rounded mb-3" />
+          <div className="h-5 w-72 bg-muted rounded mb-3" />
+          <div className="h-20 w-full bg-muted rounded" />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {[1, 2].map((item) => (
+            <div
+              key={item}
+              className="animate-pulse rounded-2xl border border-border bg-card overflow-hidden"
+            >
+              <div className="h-52 bg-muted" />
+              <div className="p-4 space-y-3">
+                <div className="h-6 w-40 bg-muted rounded" />
+                <div className="h-4 w-24 bg-muted rounded" />
+                <div className="h-4 w-48 bg-muted rounded" />
+                <div className="h-24 w-full bg-muted rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   if (!trip) {
-    return <div className="p-6 max-w-6xl mx-auto">Trip not found</div>;
+    return (
+      <div className="p-6 max-w-4xl mx-auto">
+        <div className="rounded-3xl border border-border bg-card p-8 text-center">
+          <h1 className="text-2xl font-bold mb-3">Trip not found</h1>
+          <p className="text-muted-foreground mb-6">
+            This trip may have been deleted or is no longer available.
+          </p>
+          <Button onClick={() => setLocation("/trips")}>
+            Back to trips
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   const city = trip.city_id ? cityMap[trip.city_id] : null;
+  const tripDateLabel =
+    trip.start_date || trip.end_date
+      ? `${formatDate(trip.start_date) || "No start date"} → ${
+          formatDate(trip.end_date) || "No end date"
+        }`
+      : null;
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
@@ -437,33 +666,50 @@ export function TripDetails() {
 
       <div className="rounded-2xl border border-border bg-card p-5 md:p-6 mb-8">
         {!editing ? (
-          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">{trip.title}</h1>
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold mb-3">{trip.title}</h1>
 
-              {city && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                  <MapPin className="w-4 h-4 text-primary" />
-                  <span>{city.name}</span>
-                </div>
-              )}
+              <div className="flex flex-wrap items-center gap-3 mb-4">
+                {city && (
+                  <div className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-sm text-muted-foreground">
+                    <MapPin className="w-4 h-4 text-primary" />
+                    <span>{city.name}</span>
+                  </div>
+                )}
 
-              {(trip.start_date || trip.end_date) && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                  <CalendarDays className="w-4 h-4 text-primary" />
+                {tripDateLabel && (
+                  <div className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-sm text-muted-foreground">
+                    <CalendarDays className="w-4 h-4 text-primary" />
+                    <span>{tripDateLabel}</span>
+                  </div>
+                )}
+
+                <div className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-sm text-muted-foreground">
+                  <FolderOpen className="w-4 h-4 text-primary" />
                   <span>
-                    {trip.start_date || "No start date"} →{" "}
-                    {trip.end_date || "No end date"}
+                    {places.length} saved {places.length === 1 ? "place" : "places"}
                   </span>
                 </div>
-              )}
 
-              {trip.notes && (
-                <p className="text-muted-foreground mt-3">{trip.notes}</p>
+                <div className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-sm text-muted-foreground">
+                  <StickyNote className="w-4 h-4 text-primary" />
+                  <span>{notesCount} {notesCount === 1 ? "note" : "notes"}</span>
+                </div>
+              </div>
+
+              {trip.notes ? (
+                <p className="text-muted-foreground leading-relaxed">
+                  {trip.notes}
+                </p>
+              ) : (
+                <p className="text-sm italic text-muted-foreground/70">
+                  No trip notes yet.
+                </p>
               )}
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <Button variant="outline" onClick={() => setEditing(true)}>
                 <Pencil className="w-4 h-4 mr-2" />
                 Edit trip
@@ -553,10 +799,16 @@ export function TripDetails() {
       </div>
 
       {places.length === 0 ? (
-        <div className="rounded-xl border border-border p-6 bg-card">
+        <div className="rounded-2xl border border-border p-8 bg-card">
+          <div className="flex items-center gap-2 mb-3">
+            <StickyNote className="w-5 h-5 text-primary" />
+            <h2 className="text-xl font-semibold">Saved places</h2>
+          </div>
+
           <p className="text-muted-foreground">
             No places added to this trip yet.
           </p>
+
           <Link
             href="/search"
             className="inline-flex mt-4 text-sm font-medium text-primary hover:opacity-80"
@@ -566,153 +818,14 @@ export function TripDetails() {
         </div>
       ) : (
         <>
-          <div className="flex items-center gap-2 mb-5">
+          <div className="flex items-center gap-2 mb-6">
             <StickyNote className="w-5 h-5 text-primary" />
-            <h2 className="text-xl font-semibold">Saved places</h2>
+            <h2 className="text-2xl font-semibold">Saved places</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {places.map((item) => {
-              const place = item.place;
-
-              if (!place) {
-                return (
-                  <div
-                    key={item.id}
-                    className="rounded-2xl border border-border bg-card p-4"
-                  >
-                    <p className="text-muted-foreground">
-                      This place could not be loaded.
-                    </p>
-                  </div>
-                );
-              }
-
-              const currentNote = noteValues[item.id] ?? "";
-              const savedNote = savedNoteValues[item.id] ?? "";
-              const isChanged = currentNote !== savedNote;
-              const hasSavedNote = savedNote.trim().length > 0;
-
-              return (
-                <div
-                  key={item.id}
-                  className="rounded-2xl border border-border bg-card overflow-hidden"
-                >
-                  <Link href={`/place/${place.id}`}>
-                    <img
-                      src={place.image_url}
-                      alt={place.name}
-                      className="w-full h-52 object-cover cursor-pointer"
-                    />
-                  </Link>
-
-                  <div className="p-4">
-                    <div className="flex items-start justify-between gap-3 mb-3">
-                      <div>
-                        <Link href={`/place/${place.id}`}>
-                          <h2 className="text-xl font-semibold hover:text-primary transition-colors cursor-pointer">
-                            {place.name}
-                          </h2>
-                        </Link>
-
-                        <p className="text-sm text-muted-foreground capitalize mt-1">
-                          {place.category}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-1 text-sm font-semibold bg-muted px-2.5 py-1.5 rounded-lg shrink-0">
-                        <Star className="w-4 h-4 fill-accent text-accent" />
-                        <span>{place.rating}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-                      <MapPin className="w-4 h-4 text-primary" />
-                      <span>{place.location || "No location"}</span>
-                    </div>
-
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium mb-2">
-                        Notes
-                      </label>
-                      <textarea
-                        value={currentNote}
-                        onChange={(e) =>
-                          setNoteValues((prev) => ({
-                            ...prev,
-                            [item.id]: e.target.value,
-                          }))
-                        }
-                        placeholder="Add a note for this place..."
-                        rows={3}
-                        className="w-full rounded-xl border border-border bg-muted p-3 outline-none resize-none"
-                      />
-                    </div>
-
-                    <div className="flex gap-3">
-                      <Button
-                        onClick={() => handleSaveNote(item.id)}
-                        disabled={savingNoteId === item.id || !isChanged}
-                        className="flex-1"
-                      >
-                        {savingNoteId === item.id ? (
-                          "Saving..."
-                        ) : savedNoteId === item.id ? (
-                          <>
-                            <CheckCircle2 className="w-4 h-4 mr-2" />
-                            Saved
-                          </>
-                        ) : hasSavedNote ? (
-                          isChanged ? (
-                            "Save changes"
-                          ) : (
-                            "Saved"
-                          )
-                        ) : (
-                          "Save note"
-                        )}
-                      </Button>
-
-                      {hasSavedNote ? (
-                        <Button
-                          variant="outline"
-                          onClick={() => handleDeleteNote(item.id)}
-                          disabled={savingNoteId === item.id}
-                          className="flex-1"
-                        >
-                          Delete note
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="outline"
-                          onClick={() => handleRemovePlace(item.id)}
-                          disabled={removingId === item.id}
-                          className="flex-1"
-                        >
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          {removingId === item.id ? "Removing..." : "Remove"}
-                        </Button>
-                      )}
-                    </div>
-
-                    {hasSavedNote && (
-                      <Button
-                        variant="ghost"
-                        onClick={() => handleRemovePlace(item.id)}
-                        disabled={removingId === item.id}
-                        className="w-full mt-2"
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        {removingId === item.id
-                          ? "Removing..."
-                          : "Remove place from trip"}
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          {renderPlaceSection("Stays", groupedPlaces.stay)}
+          {renderPlaceSection("Activities", groupedPlaces.activity)}
+          {renderPlaceSection("Restaurants", groupedPlaces.restaurant)}
         </>
       )}
     </div>
