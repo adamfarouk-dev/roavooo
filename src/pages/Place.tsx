@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "wouter";
 import {
   MapPin,
@@ -41,12 +41,12 @@ type DbPlace = {
 export function Place() {
   const { id } = useParams();
   const { isFavorite, toggleFavorite } = useFavorites();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
 
   const [cities, setCities] = useState<DbCity[]>([]);
   const [places, setPlaces] = useState<DbPlace[]>([]);
   const [loading, setLoading] = useState(true);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [saveModalOpen, setSaveModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -58,13 +58,13 @@ export function Place() {
       if (citiesRes.error) {
         console.error("Failed to fetch cities:", citiesRes.error);
       } else {
-        setCities((citiesRes.data as DbCity[]) || []);
+        setCities((citiesRes.data ?? []) as DbCity[]);
       }
 
       if (placesRes.error) {
         console.error("Failed to fetch places:", placesRes.error);
       } else {
-        setPlaces((placesRes.data as DbPlace[]) || []);
+        setPlaces((placesRes.data ?? []) as DbPlace[]);
       }
 
       setLoading(false);
@@ -73,19 +73,47 @@ export function Place() {
     fetchData();
   }, []);
 
-  const closeModal = () => {
-    setModalOpen(false);
-  };
+  const dbPlace = useMemo(
+    () => places.find((p) => p.id === id),
+    [places, id]
+  );
 
-  const openSaveToTripModal = () => {
-    setModalOpen(true);
-  };
+  useEffect(() => {
+    const trackRecentlyViewed = async () => {
+      if (!dbPlace?.id) return;
+
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+
+      if (userError) {
+        console.error("Failed to get user for recently viewed:", userError);
+        return;
+      }
+
+      const user = userData.user;
+      if (!user) return;
+
+      const { error } = await supabase.from("recently_viewed").upsert(
+        {
+          user_id: user.id,
+          place_id: dbPlace.id,
+          viewed_at: new Date().toISOString(),
+        },
+        {
+          onConflict: "user_id,place_id",
+        }
+      );
+
+      if (error) {
+        console.error("Failed to track recently viewed place:", error);
+      }
+    };
+
+    trackRecentlyViewed();
+  }, [dbPlace?.id]);
 
   if (loading) {
     return <div className="w-full min-h-screen bg-background" />;
   }
-
-  const dbPlace = places.find((p) => p.id === id);
 
   if (!dbPlace) return <NotFound />;
 
@@ -105,7 +133,7 @@ export function Place() {
       cityId: place.city_id,
       name: place.name,
       category: place.category,
-      description: place.description_en,
+      description: lang === "fr" ? place.description_fr : place.description_en,
       imageUrl: place.image_url,
       location: place.location ?? undefined,
       rating: place.rating,
@@ -121,7 +149,9 @@ export function Place() {
 
   const translatedPlace =
     t.place.content?.[dbPlace.id as keyof typeof t.place.content];
-  const description = translatedPlace?.description ?? dbPlace.description_en;
+  const description =
+    translatedPlace?.description ??
+    (lang === "fr" ? dbPlace.description_fr : dbPlace.description_en);
   const details = translatedPlace?.details ?? [];
 
   return (
@@ -244,7 +274,7 @@ export function Place() {
 
             <Button
               variant="outline"
-              onClick={openSaveToTripModal}
+              onClick={() => setSaveModalOpen(true)}
               className="w-full py-6 text-lg rounded-xl mb-4 font-semibold"
             >
               <FolderPlus className="w-5 h-5 mr-2" />
@@ -262,7 +292,7 @@ export function Place() {
               <ul className="space-y-3 text-muted-foreground">
                 {t.place.highlightsList.map((item, i) => (
                   <li key={i} className="flex items-center gap-3">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />{" "}
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                     {item}
                   </li>
                 ))}
@@ -279,7 +309,7 @@ export function Place() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {relatedPlaces.map((p) => (
-              <PlaceCard key={p.id} place={p} />
+              <PlaceCard key={p.id} place={p} showSaveToTrip />
             ))}
           </div>
         </div>
@@ -288,8 +318,8 @@ export function Place() {
       <SaveToTripModal
         placeId={dbPlace.id}
         placeName={dbPlace.name}
-        isOpen={modalOpen}
-        onClose={closeModal}
+        isOpen={saveModalOpen}
+        onClose={() => setSaveModalOpen(false)}
       />
     </div>
   );

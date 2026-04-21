@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import {
   MapPin,
   CalendarDays,
@@ -255,11 +255,17 @@ export function Trips() {
       </div>
 
       {trips.length === 0 ? (
-        <div className="rounded-2xl border border-border bg-card p-8 mb-8">
+        <div className="rounded-2xl border border-border bg-card p-8 mb-8 text-center">
           <h2 className="text-xl font-semibold mb-2">No trips yet</h2>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground mb-5">
             Create your first trip below and start building your itinerary.
           </p>
+          <Link
+            href="/search"
+            className="inline-flex text-sm font-medium text-primary hover:opacity-80"
+          >
+            Explore places →
+          </Link>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">

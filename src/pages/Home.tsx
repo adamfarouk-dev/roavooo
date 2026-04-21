@@ -8,6 +8,7 @@ import {
   Bed,
   Compass,
   Utensils,
+  History,
 } from "lucide-react";
 import { PlaceCard } from "@/components/ui/PlaceCard";
 import { Input } from "@/components/ui/input";
@@ -50,6 +51,12 @@ type DbPlace = {
   cuisine: string | null;
 };
 
+type RecentViewRow = {
+  place_id: string;
+  viewed_at: string;
+  places: DbPlace | DbPlace[] | null;
+};
+
 export function Home() {
   const [, setLocation] = useLocation();
   const { t, lang } = useLanguage();
@@ -60,16 +67,21 @@ export function Home() {
   >("stay");
   const [cities, setCities] = useState<DbCity[]>([]);
   const [places, setPlaces] = useState<DbPlace[]>([]);
+  const [recentPlaces, setRecentPlaces] = useState<DbPlace[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchHomeData = async () => {
       setLoading(true);
 
-      const [citiesRes, placesRes] = await Promise.all([
+      const [{ data: userData }, citiesRes, placesRes] = await Promise.all([
+        supabase.auth.getUser(),
         supabase.from("cities").select("*").order("name", { ascending: true }),
         supabase.from("places").select("*").order("rating", { ascending: false }),
       ]);
+
+      setUserId(userData.user?.id ?? null);
 
       if (citiesRes.error) {
         console.error("Failed to fetch cities:", citiesRes.error);
@@ -91,6 +103,57 @@ export function Home() {
     fetchHomeData();
   }, []);
 
+  useEffect(() => {
+    const fetchRecentlyViewed = async () => {
+      if (!userId) {
+        setRecentPlaces([]);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("recently_viewed")
+        .select(
+          `
+          place_id,
+          viewed_at,
+          places (
+            id,
+            city_id,
+            name,
+            category,
+            description_en,
+            description_fr,
+            image_url,
+            location,
+            rating,
+            price_per_night,
+            price_range,
+            cuisine
+          )
+        `
+        )
+        .eq("user_id", userId)
+        .order("viewed_at", { ascending: false })
+        .limit(6);
+
+      if (error) {
+        console.error("Failed to fetch recently viewed places:", error);
+        setRecentPlaces([]);
+        return;
+      }
+
+      const normalized = ((data ?? []) as RecentViewRow[])
+        .map((item) =>
+          Array.isArray(item.places) ? item.places[0] ?? null : item.places
+        )
+        .filter(Boolean) as DbPlace[];
+
+      setRecentPlaces(normalized);
+    };
+
+    fetchRecentlyViewed();
+  }, [userId]);
+
   const CATEGORIES = [
     { label: t.hero.tabs.stays, value: "stay" as const, icon: Bed },
     { label: t.hero.tabs.experiences, value: "activity" as const, icon: Compass },
@@ -107,24 +170,30 @@ export function Home() {
     setLocation(`/search?${params.toString()}`);
   };
 
+  const mapPlace = (place: DbPlace) => ({
+    id: place.id,
+    cityId: place.city_id,
+    name: place.name,
+    category: String(place.category).trim().toLowerCase() as
+      | "stay"
+      | "activity"
+      | "restaurant",
+    description: lang === "fr" ? place.description_fr : place.description_en,
+    imageUrl: place.image_url,
+    location: place.location ?? undefined,
+    rating: place.rating,
+    pricePerNight: place.price_per_night ?? undefined,
+    priceRange: place.price_range ?? undefined,
+    cuisine: place.cuisine ?? undefined,
+  });
+
   const mappedPlaces = useMemo(() => {
-    return places.map((place) => ({
-      id: place.id,
-      cityId: place.city_id,
-      name: place.name,
-      category: String(place.category).trim().toLowerCase() as
-        | "stay"
-        | "activity"
-        | "restaurant",
-      description: lang === "fr" ? place.description_fr : place.description_en,
-      imageUrl: place.image_url,
-      location: place.location ?? undefined,
-      rating: place.rating,
-      pricePerNight: place.price_per_night ?? undefined,
-      priceRange: place.price_range ?? undefined,
-      cuisine: place.cuisine ?? undefined,
-    }));
+    return places.map(mapPlace);
   }, [places, lang]);
+
+  const mappedRecentPlaces = useMemo(() => {
+    return recentPlaces.map(mapPlace);
+  }, [recentPlaces, lang]);
 
   const featuredStays = useMemo(
     () =>
@@ -155,7 +224,6 @@ export function Home() {
 
   return (
     <div className="w-full">
-      {/* Hero */}
       <section className="relative h-[88vh] min-h-[620px] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img
@@ -243,7 +311,39 @@ export function Home() {
         </div>
       </section>
 
-      {/* Cities */}
+      {userId && mappedRecentPlaces.length > 0 && (
+        <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+          <div className="flex justify-between items-end mb-10">
+            <div>
+              <p className="text-primary text-xs font-semibold uppercase tracking-widest mb-2">
+                Personal
+              </p>
+              <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground flex items-center gap-3">
+                <History className="w-8 h-8 text-primary" />
+                Continue exploring
+              </h2>
+              <p className="text-muted-foreground mt-2 max-w-lg">
+                Jump back into places you recently viewed.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {mappedRecentPlaces.map((place, i) => (
+              <motion.div
+                key={place.id}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.08, duration: 0.5 }}
+              >
+                <PlaceCard place={place} showSaveToTrip />
+              </motion.div>
+            ))}
+          </div>
+        </section>
+      )}
+
       <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="flex justify-between items-end mb-10 gap-4">
           <div>
@@ -322,7 +422,6 @@ export function Home() {
         )}
       </section>
 
-      {/* Stays */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-card/40 border-y border-border/40">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-end mb-10">
@@ -393,7 +492,6 @@ export function Home() {
         </div>
       </section>
 
-      {/* Experiences */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="flex justify-between items-end mb-10">
           <div>
@@ -453,7 +551,6 @@ export function Home() {
         )}
       </section>
 
-      {/* Dining */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-card/40 border-y border-border/40">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-end mb-10">
@@ -526,12 +623,3 @@ export function Home() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
