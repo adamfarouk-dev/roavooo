@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -29,25 +30,44 @@ import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
 
+function ScrollToTop() {
+  const [location] = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, [location]);
+
+  return null;
+}
+
 function AppShell() {
   const [location] = useLocation();
   const isAdminRoute = location.startsWith("/admin");
 
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background">
+      <ScrollToTop />
+
       {!isAdminRoute && <Navbar />}
 
       <main className="flex-grow">
         <Switch>
           <Route path="/" component={Home} />
+
+          <Route path="/cities" component={Cities} />
           <Route path="/city/:slug" component={City} />
+
           <Route path="/place/:id" component={Place} />
           <Route path="/favorites" component={Favorites} />
-          <Route path="/cities" component={Cities} />
+          <Route path="/recent" component={Recent} />
           <Route path="/search" component={Search} />
+
+          <Route path="/trips" component={Trips} />
+          <Route path="/trips/:id" component={TripDetails} />
+
+          <Route path="/profile" component={Profile} />
           <Route path="/login" component={Login} />
           <Route path="/signup" component={Signup} />
-          <Route path="/profile" component={Profile} />
 
           <Route path="/admin/login" component={AdminLogin} />
           <Route path="/admin" component={AdminDashboard} />
@@ -55,10 +75,6 @@ function AppShell() {
           <Route path="/admin/places/:id/edit" component={AdminEditPlace} />
           <Route path="/admin/cities/new" component={AdminNewCity} />
           <Route path="/admin/cities/:id/edit" component={AdminEditCity} />
-          <Route path="/trips" component={Trips} />
-          <Route path="/trips/:id" component={TripDetails} />
-          <Route path="/recent" component={Recent} />
-
 
           <Route component={NotFound} />
         </Switch>

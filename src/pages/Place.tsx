@@ -278,7 +278,7 @@ export function Place() {
               className="w-full py-6 text-lg rounded-xl mb-4 font-semibold"
             >
               <FolderPlus className="w-5 h-5 mr-2" />
-              Save to Trip
+              {t.card.saveToTrip}
             </Button>
 
             <p className="text-center text-sm text-muted-foreground">

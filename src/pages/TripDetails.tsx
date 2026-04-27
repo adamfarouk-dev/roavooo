@@ -18,6 +18,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Trip = {
   id: string;
@@ -64,6 +65,7 @@ export function TripDetails() {
   const [, params] = useRoute("/trips/:id");
   const tripId = params?.id;
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const [trip, setTrip] = useState<Trip | null>(null);
   const [places, setPlaces] = useState<TripPlaceRow[]>([]);
@@ -82,9 +84,7 @@ export function TripDetails() {
   const [notes, setNotes] = useState("");
 
   const [noteValues, setNoteValues] = useState<Record<string, string>>({});
-  const [savedNoteValues, setSavedNoteValues] = useState<Record<string, string>>(
-    {}
-  );
+  const [savedNoteValues, setSavedNoteValues] = useState<Record<string, string>>({});
   const [savingNoteId, setSavingNoteId] = useState<string | null>(null);
   const [savedNoteId, setSavedNoteId] = useState<string | null>(null);
 
@@ -180,14 +180,14 @@ export function TripDetails() {
       setNoteValues({});
       setSavedNoteValues({});
     } else {
-      const normalized: TripPlaceRow[] = (
-        (placesRes.data ?? []) as RawTripPlaceRow[]
-      ).map((item) => ({
-        id: item.id,
-        place_id: item.place_id,
-        note: item.note ?? "",
-        place: Array.isArray(item.places) ? item.places[0] ?? null : item.places,
-      }));
+      const normalized: TripPlaceRow[] = ((placesRes.data ?? []) as RawTripPlaceRow[]).map(
+        (item) => ({
+          id: item.id,
+          place_id: item.place_id,
+          note: item.note ?? "",
+          place: Array.isArray(item.places) ? item.places[0] ?? null : item.places,
+        })
+      );
 
       setPlaces(normalized);
 
@@ -230,19 +230,21 @@ export function TripDetails() {
       console.error("Failed to remove place from trip:", error);
       toast({
         variant: "destructive",
-        title: "Could not remove place",
-        description: "Please try again.",
+        title: t.tripDetails.toasts.removePlaceErrorTitle,
+        description: t.tripDetails.toasts.removePlaceErrorDescription,
       });
       setRemovingId(null);
       return;
     }
 
     setPlaces((prev) => prev.filter((p) => p.id !== tripPlaceId));
+
     setNoteValues((prev) => {
       const next = { ...prev };
       delete next[tripPlaceId];
       return next;
     });
+
     setSavedNoteValues((prev) => {
       const next = { ...prev };
       delete next[tripPlaceId];
@@ -252,8 +254,8 @@ export function TripDetails() {
     setRemovingId(null);
 
     toast({
-      title: "Place removed",
-      description: "The place was removed from your trip.",
+      title: t.tripDetails.toasts.removePlaceSuccessTitle,
+      description: t.tripDetails.toasts.removePlaceSuccessDescription,
     });
   };
 
@@ -266,8 +268,8 @@ export function TripDetails() {
     if (!cleanTitle) {
       toast({
         variant: "destructive",
-        title: "Trip title required",
-        description: "Please enter a trip title.",
+        title: t.tripDetails.toasts.titleRequiredTitle,
+        description: t.tripDetails.toasts.titleRequiredDescription,
       });
       return;
     }
@@ -275,8 +277,8 @@ export function TripDetails() {
     if (startDate && endDate && startDate > endDate) {
       toast({
         variant: "destructive",
-        title: "Invalid dates",
-        description: "End date must be after start date.",
+        title: t.tripDetails.toasts.invalidDatesTitle,
+        description: t.tripDetails.toasts.invalidDatesDescription,
       });
       return;
     }
@@ -300,8 +302,8 @@ export function TripDetails() {
       console.error("Failed to update trip:", error);
       toast({
         variant: "destructive",
-        title: "Could not update trip",
-        description: "Please try again.",
+        title: t.tripDetails.toasts.updateTripErrorTitle,
+        description: t.tripDetails.toasts.updateTripErrorDescription,
       });
       setSavingTrip(false);
       return;
@@ -314,8 +316,8 @@ export function TripDetails() {
     setSavingTrip(false);
 
     toast({
-      title: "Trip updated",
-      description: "Your trip was updated successfully.",
+      title: t.tripDetails.toasts.updateTripSuccessTitle,
+      description: t.tripDetails.toasts.updateTripSuccessDescription,
     });
   };
 
@@ -328,10 +330,7 @@ export function TripDetails() {
   const handleDeleteTrip = async () => {
     if (!trip) return;
 
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this trip? This will also remove all places saved inside it."
-    );
-
+    const confirmed = window.confirm(t.tripDetails.confirmDeleteTrip);
     if (!confirmed) return;
 
     setDeletingTrip(true);
@@ -342,8 +341,8 @@ export function TripDetails() {
       console.error("Failed to delete trip:", error);
       toast({
         variant: "destructive",
-        title: "Could not delete trip",
-        description: "Please try again.",
+        title: t.tripDetails.toasts.deleteTripErrorTitle,
+        description: t.tripDetails.toasts.deleteTripErrorDescription,
       });
       setDeletingTrip(false);
       return;
@@ -352,8 +351,8 @@ export function TripDetails() {
     setDeletingTrip(false);
 
     toast({
-      title: "Trip deleted",
-      description: "The trip was deleted successfully.",
+      title: t.tripDetails.toasts.deleteTripSuccessTitle,
+      description: t.tripDetails.toasts.deleteTripSuccessDescription,
     });
 
     setLocation("/trips");
@@ -374,8 +373,8 @@ export function TripDetails() {
       console.error("Failed to save note:", error);
       toast({
         variant: "destructive",
-        title: "Could not save note",
-        description: "Please try again.",
+        title: t.tripDetails.toasts.saveNoteErrorTitle,
+        description: t.tripDetails.toasts.saveNoteErrorDescription,
       });
       setSavingNoteId(null);
       return;
@@ -399,8 +398,8 @@ export function TripDetails() {
     setSavedNoteId(tripPlaceId);
 
     toast({
-      title: "Note saved",
-      description: "Your place note was saved successfully.",
+      title: t.tripDetails.toasts.saveNoteSuccessTitle,
+      description: t.tripDetails.toasts.saveNoteSuccessDescription,
     });
 
     clearSavedNoteTimer();
@@ -423,8 +422,8 @@ export function TripDetails() {
       console.error("Failed to delete note:", error);
       toast({
         variant: "destructive",
-        title: "Could not delete note",
-        description: "Please try again.",
+        title: t.tripDetails.toasts.deleteNoteErrorTitle,
+        description: t.tripDetails.toasts.deleteNoteErrorDescription,
       });
       setSavingNoteId(null);
       return;
@@ -447,8 +446,8 @@ export function TripDetails() {
     setSavingNoteId(null);
 
     toast({
-      title: "Note deleted",
-      description: "The note was removed successfully.",
+      title: t.tripDetails.toasts.deleteNoteSuccessTitle,
+      description: t.tripDetails.toasts.deleteNoteSuccessDescription,
     });
   };
 
@@ -456,8 +455,8 @@ export function TripDetails() {
 
   const tripDateLabel =
     trip?.start_date || trip?.end_date
-      ? `${formatDate(trip?.start_date ?? null) || "No start date"} → ${
-          formatDate(trip?.end_date ?? null) || "No end date"
+      ? `${formatDate(trip?.start_date ?? null) || t.trips.noStartDate} → ${
+          formatDate(trip?.end_date ?? null) || t.trips.noEndDate
         }`
       : null;
 
@@ -466,13 +465,8 @@ export function TripDetails() {
 
     if (!place) {
       return (
-        <div
-          key={item.id}
-          className="rounded-2xl border border-border bg-card p-4"
-        >
-          <p className="text-muted-foreground">
-            This place could not be loaded.
-          </p>
+        <div key={item.id} className="rounded-2xl border border-border bg-card p-4">
+          <p className="text-muted-foreground">{t.tripDetails.failedPlaceLoad}</p>
         </div>
       );
     }
@@ -482,11 +476,10 @@ export function TripDetails() {
     const isChanged = currentNote !== savedNote;
     const hasSavedNote = savedNote.trim().length > 0;
 
+    const categoryLabel = t.card.category[place.category] ?? place.category;
+
     return (
-      <div
-        key={item.id}
-        className="rounded-2xl border border-border bg-card overflow-hidden"
-      >
+      <div key={item.id} className="rounded-2xl border border-border bg-card overflow-hidden">
         <Link href={`/place/${place.id}`}>
           <img
             src={place.image_url}
@@ -504,8 +497,8 @@ export function TripDetails() {
                 </h2>
               </Link>
 
-              <p className="text-sm text-muted-foreground capitalize mt-1">
-                {place.category}
+              <p className="text-sm text-muted-foreground mt-1">
+                {categoryLabel}
               </p>
             </div>
 
@@ -517,11 +510,14 @@ export function TripDetails() {
 
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
             <MapPin className="w-4 h-4 text-primary" />
-            <span>{place.location || "No location"}</span>
+            <span>{place.location || t.tripDetails.noLocation}</span>
           </div>
 
           <div className="mb-4">
-            <label className="block text-sm font-medium mb-2">Notes</label>
+            <label className="block text-sm font-medium mb-2">
+              {t.tripDetails.notesLabel}
+            </label>
+
             <textarea
               value={currentNote}
               onChange={(e) =>
@@ -530,7 +526,7 @@ export function TripDetails() {
                   [item.id]: e.target.value,
                 }))
               }
-              placeholder="Add a note for this place..."
+              placeholder={t.tripDetails.addNotePlaceholder}
               rows={3}
               className="w-full rounded-xl border border-border bg-muted p-3 outline-none resize-none"
             />
@@ -543,16 +539,16 @@ export function TripDetails() {
               className="flex-1"
             >
               {savingNoteId === item.id ? (
-                "Saving..."
+                t.tripDetails.savingNote
               ) : savedNoteId === item.id ? (
                 <>
                   <CheckCircle2 className="w-4 h-4 mr-2" />
-                  Saved
+                  {t.tripDetails.saved}
                 </>
               ) : hasSavedNote ? (
-                isChanged ? "Save changes" : "Saved"
+                isChanged ? t.tripDetails.saveChanges : t.tripDetails.saved
               ) : (
-                "Save note"
+                t.tripDetails.saveNote
               )}
             </Button>
 
@@ -563,7 +559,7 @@ export function TripDetails() {
                 disabled={savingNoteId === item.id}
                 className="flex-1"
               >
-                Delete note
+                {t.tripDetails.deleteNote}
               </Button>
             ) : (
               <Button
@@ -573,7 +569,9 @@ export function TripDetails() {
                 className="flex-1"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
-                {removingId === item.id ? "Removing..." : "Remove"}
+                {removingId === item.id
+                  ? t.tripDetails.removing
+                  : t.tripDetails.remove}
               </Button>
             )}
           </div>
@@ -586,7 +584,9 @@ export function TripDetails() {
               className="w-full mt-2"
             >
               <Trash2 className="w-4 h-4 mr-2" />
-              {removingId === item.id ? "Removing..." : "Remove place from trip"}
+              {removingId === item.id
+                ? t.tripDetails.removing
+                : t.tripDetails.removePlaceFromTrip}
             </Button>
           )}
         </div>
@@ -610,7 +610,10 @@ export function TripDetails() {
           </div>
 
           <span className="text-sm text-muted-foreground">
-            {items.length} {items.length === 1 ? "place" : "places"}
+            {items.length}{" "}
+            {items.length === 1
+              ? t.tripDetails.placeSingular
+              : t.tripDetails.placePlural}
           </span>
         </div>
 
@@ -622,44 +625,24 @@ export function TripDetails() {
   };
 
   if (loading) {
-    return (
-      <div className="p-6 max-w-6xl mx-auto">
-        <div className="animate-pulse rounded-2xl border border-border bg-card p-6 mb-8">
-          <div className="h-8 w-56 bg-muted rounded mb-4" />
-          <div className="h-5 w-40 bg-muted rounded mb-3" />
-          <div className="h-5 w-72 bg-muted rounded mb-3" />
-          <div className="h-20 w-full bg-muted rounded" />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {[1, 2].map((item) => (
-            <div
-              key={item}
-              className="animate-pulse rounded-2xl border border-border bg-card overflow-hidden"
-            >
-              <div className="h-52 bg-muted" />
-              <div className="p-4 space-y-3">
-                <div className="h-6 w-40 bg-muted rounded" />
-                <div className="h-4 w-24 bg-muted rounded" />
-                <div className="h-4 w-48 bg-muted rounded" />
-                <div className="h-24 w-full bg-muted rounded" />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
+    return <div className="p-6 max-w-6xl mx-auto">{t.trips.loading}</div>;
   }
 
   if (!trip) {
     return (
       <div className="p-6 max-w-4xl mx-auto">
         <div className="rounded-3xl border border-border bg-card p-8 text-center">
-          <h1 className="text-2xl font-bold mb-3">Trip not found</h1>
+          <h1 className="text-2xl font-bold mb-3">
+            {t.tripDetails.tripNotFoundTitle}
+          </h1>
+
           <p className="text-muted-foreground mb-6">
-            This trip may have been deleted or is no longer available.
+            {t.tripDetails.tripNotFoundMessage}
           </p>
-          <Button onClick={() => setLocation("/trips")}>Back to trips</Button>
+
+          <Button onClick={() => setLocation("/trips")}>
+            {t.tripDetails.backToTrips}
+          </Button>
         </div>
       </div>
     );
@@ -673,7 +656,7 @@ export function TripDetails() {
           className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to trips
+          {t.tripDetails.backToTrips}
         </button>
       </div>
 
@@ -701,23 +684,31 @@ export function TripDetails() {
                 <div className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-sm text-muted-foreground">
                   <StickyNote className="w-4 h-4 text-primary" />
                   <span>
-                    {places.length} saved {places.length === 1 ? "place" : "places"}
+                    {places.length} {t.tripDetails.savedLabel}{" "}
+                    {places.length === 1
+                      ? t.tripDetails.placeSingular
+                      : t.tripDetails.placePlural}
                   </span>
                 </div>
 
                 <div className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-sm text-muted-foreground">
                   <CheckCircle2 className="w-4 h-4 text-primary" />
                   <span>
-                    {notesCount} {notesCount === 1 ? "note" : "notes"}
+                    {notesCount}{" "}
+                    {notesCount === 1
+                      ? t.tripDetails.noteSingular
+                      : t.tripDetails.notePlural}
                   </span>
                 </div>
               </div>
 
               {trip.notes ? (
-                <p className="text-muted-foreground leading-relaxed">{trip.notes}</p>
+                <p className="text-muted-foreground leading-relaxed">
+                  {trip.notes}
+                </p>
               ) : (
                 <p className="text-muted-foreground/70 italic">
-                  No trip notes yet.
+                  {t.tripDetails.noTripNotes}
                 </p>
               )}
             </div>
@@ -725,7 +716,7 @@ export function TripDetails() {
             <div className="flex gap-3">
               <Button variant="outline" onClick={() => setEditing(true)}>
                 <Pencil className="w-4 h-4 mr-2" />
-                Edit trip
+                {t.tripDetails.editTrip}
               </Button>
 
               <Button
@@ -735,14 +726,19 @@ export function TripDetails() {
                 className="border-red-500/40 text-red-500 hover:bg-red-500/10"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
-                {deletingTrip ? "Deleting..." : "Delete trip"}
+                {deletingTrip
+                  ? t.tripDetails.deletingTrip
+                  : t.tripDetails.deleteTrip}
               </Button>
             </div>
           </div>
         ) : (
           <>
             <div className="flex items-center justify-between mb-5">
-              <h1 className="text-2xl font-bold">Edit trip</h1>
+              <h1 className="text-2xl font-bold">
+                {t.tripDetails.editTripTitle}
+              </h1>
+
               <button
                 onClick={handleCancelEdit}
                 className="text-muted-foreground hover:text-foreground transition-colors"
@@ -757,7 +753,7 @@ export function TripDetails() {
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Trip title"
+                placeholder={t.tripDetails.tripTitlePlaceholder}
                 className="p-3 rounded-lg bg-muted border border-border outline-none"
               />
 
@@ -766,7 +762,7 @@ export function TripDetails() {
                 onChange={(e) => setCityId(e.target.value)}
                 className="p-3 rounded-lg bg-muted border border-border outline-none"
               >
-                <option value="">Select a city (optional)</option>
+                <option value="">{t.tripDetails.selectCity}</option>
                 {cities.map((cityOption) => (
                   <option key={cityOption.id} value={cityOption.id}>
                     {cityOption.name}
@@ -793,18 +789,20 @@ export function TripDetails() {
               rows={4}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Trip notes"
+              placeholder={t.tripDetails.tripNotesPlaceholder}
               className="w-full p-3 rounded-lg bg-muted border border-border outline-none resize-none mb-4"
             />
 
             <div className="flex gap-3">
               <Button onClick={handleSaveTrip} disabled={savingTrip}>
                 <Save className="w-4 h-4 mr-2" />
-                {savingTrip ? "Saving..." : "Save changes"}
+                {savingTrip
+                  ? t.tripDetails.savingChanges
+                  : t.tripDetails.saveChanges}
               </Button>
 
               <Button variant="outline" onClick={handleCancelEdit}>
-                Cancel
+                {t.tripDetails.cancel}
               </Button>
             </div>
           </>
@@ -814,31 +812,32 @@ export function TripDetails() {
       {places.length === 0 ? (
         <div className="rounded-xl border border-border p-6 bg-card">
           <p className="text-muted-foreground">
-            No places added to this trip yet.
+            {t.tripDetails.noPlacesYet}
           </p>
+
           <Link
             href="/search"
             className="inline-flex mt-4 text-sm font-medium text-primary hover:opacity-80"
           >
-            Explore places
+            {t.tripDetails.explorePlaces}
           </Link>
         </div>
       ) : (
         <>
           {renderPlaceSection(
-            "Stays",
+            t.tripDetails.sections.stays,
             groupedPlaces.stay,
             <Bed className="w-5 h-5 text-primary" />
           )}
 
           {renderPlaceSection(
-            "Activities",
+            t.tripDetails.sections.activities,
             groupedPlaces.activity,
             <Compass className="w-5 h-5 text-primary" />
           )}
 
           {renderPlaceSection(
-            "Restaurants",
+            t.tripDetails.sections.restaurants,
             groupedPlaces.restaurant,
             <Utensils className="w-5 h-5 text-primary" />
           )}

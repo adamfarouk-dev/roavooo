@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { History, ArrowLeft } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { PlaceCard } from "@/components/ui/PlaceCard";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type DbPlace = {
   id: string;
@@ -26,6 +27,8 @@ type RecentViewRow = {
 };
 
 export function Recent() {
+  const { t, lang } = useLanguage();
+
   const [loading, setLoading] = useState(true);
   const [recentPlaces, setRecentPlaces] = useState<DbPlace[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -109,7 +112,8 @@ export function Recent() {
         | "stay"
         | "activity"
         | "restaurant",
-      description: place.description_en,
+      description:
+        lang === "fr" ? place.description_fr : place.description_en,
       imageUrl: place.image_url,
       location: place.location ?? undefined,
       rating: place.rating,
@@ -117,8 +121,9 @@ export function Recent() {
       priceRange: place.price_range ?? undefined,
       cuisine: place.cuisine ?? undefined,
     }));
-  }, [recentPlaces]);
+  }, [recentPlaces, lang]);
 
+  // LOADING
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -139,7 +144,6 @@ export function Recent() {
                 <div className="h-6 w-2/3 bg-muted rounded" />
                 <div className="h-4 w-1/2 bg-muted rounded" />
                 <div className="h-4 w-full bg-muted rounded" />
-                <div className="h-4 w-5/6 bg-muted rounded" />
               </div>
             </div>
           ))}
@@ -148,90 +152,97 @@ export function Recent() {
     );
   }
 
+  // NOT LOGGED IN
   if (!isLoggedIn) {
     return (
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back home
+          {t.city.backToHome}
         </Link>
 
         <div className="rounded-3xl border border-border bg-card p-10 text-center">
-          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-5">
-            <History className="w-8 h-8 text-primary" />
-          </div>
+          <History className="w-8 h-8 text-primary mx-auto mb-4" />
 
-          <h1 className="text-3xl font-bold mb-3">Recently viewed</h1>
+          <h1 className="text-3xl font-bold mb-3">
+            {t.recent.loginTitle}
+          </h1>
+
           <p className="text-muted-foreground mb-6">
-            Log in to see the places you recently explored.
+            {t.recent.loginMessage}
           </p>
 
           <Link
             href="/login"
-            className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground hover:opacity-90 transition-opacity"
+            className="inline-flex rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground"
           >
-            Log in
+            {t.recent.logIn}
           </Link>
         </div>
       </div>
     );
   }
 
+  // EMPTY
   if (mappedRecentPlaces.length === 0) {
     return (
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back home
+          {t.city.backToHome}
         </Link>
 
         <div className="rounded-3xl border border-border bg-card p-10 text-center">
-          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-5">
-            <History className="w-8 h-8 text-primary" />
-          </div>
+          <History className="w-8 h-8 text-primary mx-auto mb-4" />
 
-          <h1 className="text-3xl font-bold mb-3">No recently viewed places</h1>
+          <h1 className="text-3xl font-bold mb-3">
+            {t.recent.emptyTitle}
+          </h1>
+
           <p className="text-muted-foreground mb-6">
-            Start exploring places and they’ll appear here.
+            {t.recent.emptyMessage}
           </p>
 
           <Link
             href="/search"
-            className="inline-flex items-center justify-center rounded-full border border-border px-6 py-3 text-sm font-semibold hover:bg-muted transition-colors"
+            className="inline-flex rounded-full border px-6 py-3 text-sm font-semibold"
           >
-            Explore places
+            {t.recent.explorePlaces}
           </Link>
         </div>
       </div>
     );
   }
 
+  // MAIN
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <Link
         href="/"
-        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
+        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6"
       >
         <ArrowLeft className="w-4 h-4" />
-        Back home
+        {t.city.backToHome}
       </Link>
 
       <div className="mb-12">
         <p className="text-primary text-xs font-semibold uppercase tracking-widest mb-3">
-          Personal
+          {t.recent.eyebrow}
         </p>
-        <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4 flex items-center gap-3">
+
+        <h1 className="text-4xl md:text-5xl font-serif font-bold mb-4 flex items-center gap-3">
           <History className="w-9 h-9 text-primary" />
-          Continue exploring
+          {t.recent.title}
         </h1>
+
         <p className="text-xl text-muted-foreground max-w-2xl">
-          Revisit the places you recently viewed and pick up where you left off.
+          {t.recent.subtitle}
         </p>
       </div>
 

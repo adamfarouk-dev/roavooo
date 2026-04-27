@@ -15,6 +15,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type ProfileStats = {
   tripsCount: number;
@@ -31,6 +32,7 @@ type ProfileRow = {
 
 export function Profile() {
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
@@ -68,11 +70,7 @@ export function Profile() {
       setUser(currentUser);
 
       const [profileRes, tripsRes, favoritesRes] = await Promise.all([
-        supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", currentUser.id)
-          .single(),
+        supabase.from("profiles").select("*").eq("id", currentUser.id).single(),
         supabase.from("trips").select("id").eq("user_id", currentUser.id),
         supabase.from("favorites").select("id").eq("user_id", currentUser.id),
       ]);
@@ -112,8 +110,8 @@ export function Profile() {
     if (!cleanUsername) {
       toast({
         variant: "destructive",
-        title: "Username required",
-        description: "Username cannot be empty.",
+        title: t.profile.toasts.usernameRequiredTitle,
+        description: t.profile.toasts.usernameRequiredDescription,
       });
       return;
     }
@@ -132,8 +130,9 @@ export function Profile() {
       console.error("Failed to update username in auth:", error);
       toast({
         variant: "destructive",
-        title: "Could not update username",
-        description: error.message || "Please try again.",
+        title: t.profile.toasts.usernameUpdateErrorTitle,
+        description:
+          error.message || t.profile.toasts.usernameUpdateErrorDescription,
       });
       setSaving(false);
       return;
@@ -157,8 +156,8 @@ export function Profile() {
 
       toast({
         variant: "destructive",
-        title: "Partial update",
-        description: "Username changed in account, but not in profile table.",
+        title: t.profile.toasts.partialUpdateTitle,
+        description: t.profile.toasts.partialUpdateDescription,
       });
       return;
     }
@@ -170,8 +169,8 @@ export function Profile() {
     setSaving(false);
 
     toast({
-      title: "Username updated",
-      description: "Your username was updated successfully.",
+      title: t.profile.toasts.usernameUpdateSuccessTitle,
+      description: t.profile.toasts.usernameUpdateSuccessDescription,
     });
   };
 
@@ -191,8 +190,8 @@ export function Profile() {
     if (!allowedTypes.includes(file.type)) {
       toast({
         variant: "destructive",
-        title: "Invalid image type",
-        description: "Please upload a PNG, JPG, or WEBP image.",
+        title: t.profile.toasts.invalidImageTypeTitle,
+        description: t.profile.toasts.invalidImageTypeDescription,
       });
       return;
     }
@@ -200,8 +199,8 @@ export function Profile() {
     if (file.size > 2 * 1024 * 1024) {
       toast({
         variant: "destructive",
-        title: "Image too large",
-        description: "Image must be smaller than 2MB.",
+        title: t.profile.toasts.imageTooLargeTitle,
+        description: t.profile.toasts.imageTooLargeDescription,
       });
       return;
     }
@@ -220,8 +219,8 @@ export function Profile() {
       console.error("Failed to upload avatar:", uploadError);
       toast({
         variant: "destructive",
-        title: "Could not upload avatar",
-        description: "Please try again.",
+        title: t.profile.toasts.uploadAvatarErrorTitle,
+        description: t.profile.toasts.uploadAvatarErrorDescription,
       });
       setUploadingAvatar(false);
       return;
@@ -244,8 +243,8 @@ export function Profile() {
       console.error("Failed to save avatar URL:", profileError);
       toast({
         variant: "destructive",
-        title: "Profile not updated",
-        description: "Avatar uploaded, but profile was not updated.",
+        title: t.profile.toasts.profileNotUpdatedTitle,
+        description: t.profile.toasts.profileNotUpdatedDescription,
       });
       setUploadingAvatar(false);
       return;
@@ -255,8 +254,8 @@ export function Profile() {
     setUploadingAvatar(false);
 
     toast({
-      title: "Avatar updated",
-      description: "Your avatar was updated successfully.",
+      title: t.profile.toasts.avatarUpdateSuccessTitle,
+      description: t.profile.toasts.avatarUpdateSuccessDescription,
     });
 
     e.target.value = "";
@@ -274,17 +273,15 @@ export function Profile() {
             <User className="w-8 h-8 text-muted-foreground" />
           </div>
 
-          <h1 className="text-3xl font-bold mb-3">Your profile</h1>
-          <p className="text-muted-foreground mb-8">
-            Log in to view your profile, trips, and favorites.
-          </p>
+          <h1 className="text-3xl font-bold mb-3">{t.profile.title}</h1>
+          <p className="text-muted-foreground mb-8">{t.profile.subtitle}</p>
 
           <div className="flex items-center justify-center gap-3">
             <Link href="/login">
-              <Button>Log in</Button>
+              <Button>{t.profile.logIn}</Button>
             </Link>
             <Link href="/signup">
-              <Button variant="outline">Sign up</Button>
+              <Button variant="outline">{t.profile.signUp}</Button>
             </Link>
           </div>
         </div>
@@ -296,11 +293,11 @@ export function Profile() {
     user.user_metadata?.username ||
     profile?.username ||
     user.email?.split("@")[0] ||
-    "Traveler";
+    t.profile.traveler;
 
   const joinedDate = user.created_at
     ? new Date(user.created_at).toLocaleDateString()
-    : "Unknown";
+    : t.profile.unknownDate;
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
@@ -334,7 +331,9 @@ export function Profile() {
               </label>
 
               <p className="text-xs text-muted-foreground mt-2">
-                {uploadingAvatar ? "Uploading..." : "Click avatar to change"}
+                {uploadingAvatar
+                  ? t.profile.uploading
+                  : t.profile.clickAvatarToChange}
               </p>
             </div>
 
@@ -349,22 +348,26 @@ export function Profile() {
 
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mb-5">
                   <CalendarDays className="w-4 h-4" />
-                  <span>Joined {joinedDate}</span>
+                  <span>
+                    {t.profile.joined} {joinedDate}
+                  </span>
                 </div>
 
                 <Button variant="outline" onClick={() => setEditing(true)}>
                   <Pencil className="w-4 h-4 mr-2" />
-                  Edit username
+                  {t.profile.editUsername}
                 </Button>
               </>
             ) : (
               <>
-                <label className="block text-sm font-medium mb-2">Username</label>
+                <label className="block text-sm font-medium mb-2">
+                  {t.profile.usernameLabel}
+                </label>
                 <input
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Enter a username"
+                  placeholder={t.profile.usernamePlaceholder}
                   className="w-full p-3 rounded-lg bg-muted border border-border outline-none mb-4"
                 />
 
@@ -376,12 +379,12 @@ export function Profile() {
                 <div className="flex gap-3">
                   <Button onClick={handleSaveUsername} disabled={saving}>
                     <Save className="w-4 h-4 mr-2" />
-                    {saving ? "Saving..." : "Save"}
+                    {saving ? t.profile.saving : t.profile.save}
                   </Button>
 
                   <Button variant="outline" onClick={handleCancelEdit}>
                     <X className="w-4 h-4 mr-2" />
-                    Cancel
+                    {t.profile.cancel}
                   </Button>
                 </div>
               </>
@@ -391,13 +394,15 @@ export function Profile() {
 
         <div className="lg:col-span-2 space-y-6">
           <div className="rounded-3xl border border-border bg-card p-6">
-            <h2 className="text-xl font-semibold mb-5">Overview</h2>
+            <h2 className="text-xl font-semibold mb-5">{t.profile.overview}</h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="rounded-2xl border border-border bg-background p-5">
                 <div className="flex items-center gap-3 mb-3">
                   <Briefcase className="w-5 h-5 text-primary" />
-                  <span className="text-sm text-muted-foreground">Trips</span>
+                  <span className="text-sm text-muted-foreground">
+                    {t.profile.trips}
+                  </span>
                 </div>
                 <div className="text-3xl font-bold">{stats.tripsCount}</div>
               </div>
@@ -405,7 +410,9 @@ export function Profile() {
               <div className="rounded-2xl border border-border bg-background p-5">
                 <div className="flex items-center gap-3 mb-3">
                   <Heart className="w-5 h-5 text-primary" />
-                  <span className="text-sm text-muted-foreground">Favorites</span>
+                  <span className="text-sm text-muted-foreground">
+                    {t.profile.favorites}
+                  </span>
                 </div>
                 <div className="text-3xl font-bold">{stats.favoritesCount}</div>
               </div>
@@ -413,7 +420,7 @@ export function Profile() {
           </div>
 
           <div className="rounded-3xl border border-border bg-card p-6">
-            <h2 className="text-xl font-semibold mb-5">Quick access</h2>
+            <h2 className="text-xl font-semibold mb-5">{t.profile.quickAccess}</h2>
 
             <div className="space-y-3">
               <Link
@@ -422,7 +429,7 @@ export function Profile() {
               >
                 <div className="flex items-center gap-3">
                   <Briefcase className="w-5 h-5 text-primary" />
-                  <span>My Trips</span>
+                  <span>{t.profile.myTrips}</span>
                 </div>
                 <ArrowRight className="w-4 h-4 text-muted-foreground" />
               </Link>
@@ -433,7 +440,7 @@ export function Profile() {
               >
                 <div className="flex items-center gap-3">
                   <Heart className="w-5 h-5 text-primary" />
-                  <span>My Favorites</span>
+                  <span>{t.profile.myFavorites}</span>
                 </div>
                 <ArrowRight className="w-4 h-4 text-muted-foreground" />
               </Link>

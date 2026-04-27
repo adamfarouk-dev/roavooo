@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 import { useFavorites } from "@/hooks/use-favorites";
 import { PlaceCard } from "@/components/ui/PlaceCard";
-import { Heart, FolderPlus } from "lucide-react";
+import { Heart } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/lib/supabase";
-import { SaveToTripModal } from "@/components/trips/SaveToTripModal";
 
 type DbPlace = {
   id: string;
@@ -29,19 +28,12 @@ export function Favorites() {
 
   const [places, setPlaces] = useState<DbPlace[]>([]);
   const [loadingPlaces, setLoadingPlaces] = useState(false);
-  const [modalPlaceId, setModalPlaceId] = useState<string | null>(null);
 
   useEffect(() => {
     const loadPlaces = async () => {
       if (favoritesLoading) return;
 
-      if (!user) {
-        setPlaces([]);
-        setLoadingPlaces(false);
-        return;
-      }
-
-      if (favorites.length === 0) {
+      if (!user || favorites.length === 0) {
         setPlaces([]);
         setLoadingPlaces(false);
         return;
@@ -68,85 +60,6 @@ export function Favorites() {
     loadPlaces();
   }, [favorites, user, favoritesLoading]);
 
-  const closeModal = () => {
-    setModalPlaceId(null);
-  };
-
-  const openTripModal = (placeId: string) => {
-    setModalPlaceId(placeId);
-  };
-
-  if (favoritesLoading) {
-    return (
-      <div className="min-h-[70vh] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="mb-12">
-          <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4">
-            {t.favorites.title}
-          </h1>
-          <p className="text-xl text-muted-foreground">{t.favorites.subtitle}</p>
-        </div>
-
-        <div className="text-muted-foreground">Loading favorites...</div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-[70vh] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="mb-12">
-          <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4">
-            {t.favorites.title}
-          </h1>
-          <p className="text-xl text-muted-foreground">{t.favorites.subtitle}</p>
-        </div>
-
-        <div className="flex flex-col items-center justify-center py-24 px-4 bg-card rounded-3xl border border-border shadow-sm text-center">
-          <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mb-6">
-            <Heart className="w-10 h-10 text-muted-foreground/50" />
-          </div>
-          <h2 className="text-2xl font-serif font-bold mb-3">
-            Log in to save favorites
-          </h2>
-          <p className="text-muted-foreground mb-8 max-w-md">
-            Create an account or log in to save your favorite places and access them anytime.
-          </p>
-          <div className="flex gap-3">
-            <Link href="/login">
-              <Button size="lg" className="rounded-full px-8 text-lg font-semibold">
-                Log in
-              </Button>
-            </Link>
-            <Link href="/signup">
-              <Button
-                size="lg"
-                variant="outline"
-                className="rounded-full px-8 text-lg font-semibold"
-              >
-                Sign up
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (loadingPlaces) {
-    return (
-      <div className="min-h-[70vh] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="mb-12">
-          <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4">
-            {t.favorites.title}
-          </h1>
-          <p className="text-xl text-muted-foreground">{t.favorites.subtitle}</p>
-        </div>
-
-        <div className="text-muted-foreground">Loading favorite places...</div>
-      </div>
-    );
-  }
-
   const mappedPlaces = places.map((place) => ({
     id: place.id,
     cityId: place.city_id,
@@ -161,7 +74,49 @@ export function Favorites() {
     cuisine: place.cuisine ?? undefined,
   }));
 
-  const activePlace = mappedPlaces.find((place) => place.id === modalPlaceId);
+  if (favoritesLoading) {
+    return (
+      <div className="min-h-[70vh] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <h1 className="text-4xl font-serif font-bold mb-4">
+          {t.favorites.title}
+        </h1>
+        <p className="text-muted-foreground">{t.favorites.subtitle}</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-[70vh] max-w-7xl mx-auto px-4 py-16 text-center">
+        <h1 className="text-4xl font-serif font-bold mb-4">
+          {t.favorites.title}
+        </h1>
+
+        <p className="text-muted-foreground mb-6">{t.profile.subtitle}</p>
+
+        <div className="flex justify-center gap-3">
+          <Link href="/login">
+            <Button>{t.profile.logIn}</Button>
+          </Link>
+
+          <Link href="/signup">
+            <Button variant="outline">{t.profile.signUp}</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (loadingPlaces) {
+    return (
+      <div className="min-h-[70vh] max-w-7xl mx-auto px-4 py-16">
+        <h1 className="text-4xl font-serif font-bold mb-4">
+          {t.favorites.title}
+        </h1>
+        <p className="text-muted-foreground">{t.trips.loading}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[70vh] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -173,49 +128,28 @@ export function Favorites() {
       </div>
 
       {mappedPlaces.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24 px-4 bg-card rounded-3xl border border-border shadow-sm text-center">
-          <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mb-6">
-            <Heart className="w-10 h-10 text-muted-foreground/50" />
-          </div>
-          <h2 className="text-2xl font-serif font-bold mb-3">
+        <div className="text-center py-20">
+          <Heart className="mx-auto mb-4 w-10 h-10 text-muted-foreground" />
+
+          <h2 className="text-xl font-semibold mb-2">
             {t.favorites.emptyTitle}
           </h2>
-          <p className="text-muted-foreground mb-8 max-w-md">
+
+          <p className="text-muted-foreground mb-6">
             {t.favorites.emptyMessage}
           </p>
+
           <Link href="/search">
-            <Button size="lg" className="rounded-full px-8 text-lg font-semibold">
-              {t.favorites.emptyCta}
-            </Button>
+            <Button>{t.favorites.emptyCta}</Button>
           </Link>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {mappedPlaces.map((place) => (
-            <div key={place.id} className="space-y-3">
-              <PlaceCard place={place} />
-
-              <div className="rounded-2xl border border-border bg-card p-3">
-                <Button
-                  variant="outline"
-                  onClick={() => openTripModal(place.id)}
-                  className="w-full rounded-xl"
-                >
-                  <FolderPlus className="w-4 h-4 mr-2" />
-                  Save to Trip
-                </Button>
-              </div>
-            </div>
+            <PlaceCard key={place.id} place={place} showSaveToTrip />
           ))}
         </div>
       )}
-
-      <SaveToTripModal
-        placeId={modalPlaceId}
-        placeName={activePlace?.name}
-        isOpen={!!modalPlaceId}
-        onClose={closeModal}
-      />
     </div>
   );
 }

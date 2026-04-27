@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Trip = {
   id: string;
@@ -43,6 +44,7 @@ type TripPlaceRow = {
 export function Trips() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const [trips, setTrips] = useState<Trip[]>([]);
   const [cities, setCities] = useState<City[]>([]);
@@ -169,8 +171,8 @@ export function Trips() {
     if (!cleanTitle) {
       toast({
         variant: "destructive",
-        title: "Trip title required",
-        description: "Please enter a trip title.",
+        title: t.trips.toasts.titleRequiredTitle,
+        description: t.trips.toasts.titleRequiredDescription,
       });
       return;
     }
@@ -178,8 +180,8 @@ export function Trips() {
     if (startDate && endDate && startDate > endDate) {
       toast({
         variant: "destructive",
-        title: "Invalid dates",
-        description: "End date must be after start date.",
+        title: t.trips.toasts.invalidDatesTitle,
+        description: t.trips.toasts.invalidDatesDescription,
       });
       return;
     }
@@ -192,8 +194,8 @@ export function Trips() {
       console.error("Error fetching user:", userError);
       toast({
         variant: "destructive",
-        title: "Could not get user",
-        description: "Please try again.",
+        title: t.trips.toasts.getUserTitle,
+        description: t.trips.toasts.getUserDescription,
       });
       setCreating(false);
       return;
@@ -204,8 +206,8 @@ export function Trips() {
     if (!user) {
       toast({
         variant: "destructive",
-        title: "Login required",
-        description: "You must be logged in to create a trip.",
+        title: t.trips.toasts.loginRequiredTitle,
+        description: t.trips.toasts.loginRequiredDescription,
       });
       setCreating(false);
       return;
@@ -224,8 +226,8 @@ export function Trips() {
       console.error("Error creating trip:", error);
       toast({
         variant: "destructive",
-        title: "Could not create trip",
-        description: "Please try again.",
+        title: t.trips.toasts.createErrorTitle,
+        description: t.trips.toasts.createErrorDescription,
       });
       setCreating(false);
       return;
@@ -236,8 +238,8 @@ export function Trips() {
     setCreating(false);
 
     toast({
-      title: "Trip created",
-      description: "Your trip was created successfully.",
+      title: t.trips.toasts.createSuccessTitle,
+      description: t.trips.toasts.createSuccessDescription,
     });
   };
 
@@ -248,23 +250,19 @@ export function Trips() {
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">My Trips</h1>
-        <p className="text-muted-foreground">
-          Create and organize your trips in one place.
-        </p>
+        <h1 className="text-3xl font-bold mb-2">{t.trips.title}</h1>
+        <p className="text-muted-foreground">{t.trips.subtitle}</p>
       </div>
 
       {trips.length === 0 ? (
         <div className="rounded-2xl border border-border bg-card p-8 mb-8 text-center">
-          <h2 className="text-xl font-semibold mb-2">No trips yet</h2>
-          <p className="text-muted-foreground mb-5">
-            Create your first trip below and start building your itinerary.
-          </p>
+          <h2 className="text-xl font-semibold mb-2">{t.trips.emptyTitle}</h2>
+          <p className="text-muted-foreground mb-5">{t.trips.emptyMessage}</p>
           <Link
             href="/search"
             className="inline-flex text-sm font-medium text-primary hover:opacity-80"
           >
-            Explore places →
+            {t.trips.explorePlaces} →
           </Link>
         </div>
       ) : (
@@ -313,7 +311,10 @@ export function Trips() {
                       <div className="inline-flex items-center gap-1.5">
                         <FolderOpen className="w-4 h-4" />
                         <span>
-                          {placesCount} {placesCount === 1 ? "place" : "places"}
+                          {placesCount}{" "}
+                          {placesCount === 1
+                            ? t.trips.placeSingular
+                            : t.trips.placePlural}
                         </span>
                       </div>
                     </div>
@@ -325,8 +326,8 @@ export function Trips() {
                     <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
                       <CalendarDays className="w-4 h-4 text-primary" />
                       <span>
-                        {formattedStartDate || "No start date"} →{" "}
-                        {formattedEndDate || "No end date"}
+                        {formattedStartDate || t.trips.noStartDate} →{" "}
+                        {formattedEndDate || t.trips.noEndDate}
                       </span>
                     </div>
                   )}
@@ -337,15 +338,17 @@ export function Trips() {
                     </p>
                   ) : (
                     <p className="text-sm text-muted-foreground/70 italic mb-4">
-                      No trip notes yet.
+                      {t.trips.noTripNotes}
                     </p>
                   )}
 
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>
-                      Created {formatDate(trip.created_at) || "Unknown date"}
+                      {t.trips.created} {formatDate(trip.created_at) || t.trips.unknownDate}
                     </span>
-                    <span className="text-primary font-medium">Open trip →</span>
+                    <span className="text-primary font-medium">
+                      {t.trips.openTrip} →
+                    </span>
                   </div>
                 </div>
               </div>
@@ -357,13 +360,13 @@ export function Trips() {
       <div className="rounded-3xl border border-border bg-card p-5 md:p-6">
         <div className="flex items-center gap-2 mb-5">
           <Plus className="w-5 h-5 text-primary" />
-          <h2 className="text-xl font-semibold">Create a new trip</h2>
+          <h2 className="text-xl font-semibold">{t.trips.createNewTrip}</h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <input
             type="text"
-            placeholder="Trip title (ex: Marrakech Spring Trip)"
+            placeholder={t.trips.tripTitlePlaceholder}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className="p-3 rounded-lg bg-muted border border-border outline-none"
@@ -374,7 +377,7 @@ export function Trips() {
             onChange={(e) => setCityId(e.target.value)}
             className="p-3 rounded-lg bg-muted border border-border outline-none"
           >
-            <option value="">Select a city (optional)</option>
+            <option value="">{t.trips.selectCity}</option>
             {cities.map((city) => (
               <option key={city.id} value={city.id}>
                 {city.name}
@@ -398,7 +401,7 @@ export function Trips() {
         </div>
 
         <textarea
-          placeholder="Trip notes (optional)"
+          placeholder={t.trips.tripNotesPlaceholder}
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           rows={4}
@@ -410,7 +413,7 @@ export function Trips() {
           disabled={creating}
           className="px-5 py-3 bg-primary text-white rounded-lg font-semibold hover:opacity-90 disabled:opacity-60"
         >
-          {creating ? "Creating..." : "Create trip"}
+          {creating ? "Creating..." : t.trips.createNewTrip}
         </button>
       </div>
     </div>

@@ -1,13 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
-import {
-  Menu,
-  X,
-  Search,
-  LogOut,
-  User,
-  Briefcase,
-} from "lucide-react";
+import { Menu, X, Search, LogOut, User, Briefcase } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/lib/supabase";
@@ -54,28 +47,28 @@ export function Navbar() {
   const navLinks = [
     { name: t.nav.home, path: "/" },
     { name: t.nav.cities, path: "/cities" },
-    { name: "Trips", path: "/trips" },
+    { name: t.nav.trips, path: "/trips" },
     { name: t.nav.favorites, path: "/favorites" },
     { name: t.nav.search, path: "/search" },
   ];
 
   const isLinkActive = (path: string) => {
-  if (path === "/trips") {
-    return location === "/trips" || location.startsWith("/trips/");
-  }
+    if (path === "/trips") {
+      return location === "/trips" || location.startsWith("/trips/");
+    }
 
-  if (path === "/cities") {
-    return location === "/cities" || location.startsWith("/city/");
-  }
+    if (path === "/cities") {
+      return location === "/cities" || location.startsWith("/city/");
+    }
 
-  if (path === "/profile") {
-    return location === "/profile";
-  }
+    if (path === "/profile") {
+      return location === "/profile";
+    }
 
-  return location === path;
-};
+    return location === path;
+  };
 
-  const displayName = user?.user_metadata?.username || user?.email || "Account";
+  const displayName = user?.user_metadata?.username || user?.email || t.nav.account;
 
   return (
     <nav className="sticky top-0 z-50 w-full bg-background/90 backdrop-blur-md border-b border-border">
@@ -132,13 +125,13 @@ export function Navbar() {
                   href="/login"
                   className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors"
                 >
-                  Login
+                  {t.nav.login}
                 </Link>
                 <Link
                   href="/signup"
                   className="rounded-full bg-primary text-primary-foreground px-4 py-2 text-sm font-semibold hover:opacity-90 transition-opacity"
                 >
-                  Sign up
+                  {t.nav.signup}
                 </Link>
               </div>
             ) : (
@@ -156,7 +149,7 @@ export function Navbar() {
                   className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-semibold text-foreground/80 hover:text-primary hover:border-primary transition-colors"
                 >
                   <LogOut className="w-4 h-4" />
-                  Logout
+                  {t.nav.logout}
                 </button>
               </div>
             )}
@@ -237,14 +230,14 @@ export function Navbar() {
                     onClick={() => setIsOpen(false)}
                     className="block px-3 py-4 text-base font-medium rounded-md text-foreground/80 hover:text-primary hover:bg-muted"
                   >
-                    Login
+                    {t.nav.login}
                   </Link>
                   <Link
                     href="/signup"
                     onClick={() => setIsOpen(false)}
                     className="block px-3 py-4 text-base font-medium rounded-md text-foreground/80 hover:text-primary hover:bg-muted"
                   >
-                    Sign up
+                    {t.nav.signup}
                   </Link>
                 </>
               ) : (
@@ -264,7 +257,7 @@ export function Navbar() {
                     onClick={handleLogout}
                     className="w-full text-left px-3 py-4 text-base font-medium rounded-md text-foreground/80 hover:text-primary hover:bg-muted"
                   >
-                    Logout
+                    {t.nav.logout}
                   </button>
                 </>
               )}

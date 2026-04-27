@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
-import { FolderPlus, X, Check } from "lucide-react";
+import { X, Check } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Trip = {
   id: string;
@@ -35,6 +36,7 @@ export function SaveToTripModal({
   onClose,
 }: SaveToTripModalProps) {
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const [userTrips, setUserTrips] = useState<Trip[]>([]);
   const [savingToTrip, setSavingToTrip] = useState(false);
@@ -59,8 +61,7 @@ export function SaveToTripModal({
         console.error("Failed to get user:", userError);
         toast({
           variant: "destructive",
-          title: "Could not get user",
-          description: "Please try again.",
+          title: t.saveToTrip.couldNotGetUser,
         });
         setLoadingTrips(false);
         onClose();
@@ -72,8 +73,7 @@ export function SaveToTripModal({
       if (!user) {
         toast({
           variant: "destructive",
-          title: "Login required",
-          description: "You must be logged in to save a place to a trip.",
+          title: t.saveToTrip.loginRequired,
         });
         setLoadingTrips(false);
         onClose();
@@ -83,8 +83,7 @@ export function SaveToTripModal({
       if (!placeId) {
         toast({
           variant: "destructive",
-          title: "Place not found",
-          description: "Could not identify this place.",
+          title: t.saveToTrip.couldNotIdentifyPlace,
         });
         setLoadingTrips(false);
         onClose();
@@ -116,8 +115,7 @@ export function SaveToTripModal({
         console.error("Failed to fetch trips:", tripsRes.error);
         toast({
           variant: "destructive",
-          title: "Could not load trips",
-          description: "Please try again.",
+          title: t.saveToTrip.couldNotLoadTrips,
         });
         setLoadingTrips(false);
         onClose();
@@ -128,8 +126,7 @@ export function SaveToTripModal({
         console.error("Failed to fetch trip places:", tripPlacesRes.error);
         toast({
           variant: "destructive",
-          title: "Could not check saved trips",
-          description: "Please try again.",
+          title: t.saveToTrip.couldNotCheckTrips,
         });
         setLoadingTrips(false);
         onClose();
@@ -151,7 +148,7 @@ export function SaveToTripModal({
     };
 
     fetchUserTrips();
-  }, [isOpen, placeId, onClose, toast]);
+  }, [isOpen, placeId, onClose, toast, t.saveToTrip]);
 
   const handleClose = () => {
     setUserTrips([]);
@@ -187,14 +184,13 @@ export function SaveToTripModal({
       ) {
         toast({
           variant: "destructive",
-          title: "Already added",
-          description: "This place is already in that trip.",
+          title: t.saveToTrip.alreadyAdded,
+          description: t.saveToTrip.duplicate,
         });
       } else {
         toast({
           variant: "destructive",
-          title: "Could not save place",
-          description: "Please try again.",
+          title: t.saveToTrip.error,
         });
       }
 
@@ -208,8 +204,7 @@ export function SaveToTripModal({
     }));
 
     toast({
-      title: "Place added",
-      description: "The place was added to your trip successfully.",
+      title: t.saveToTrip.success,
     });
 
     setSavingToTrip(false);
@@ -219,7 +214,7 @@ export function SaveToTripModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
       <button
         type="button"
         className="absolute inset-0 bg-black/50"
@@ -229,7 +224,8 @@ export function SaveToTripModal({
       <div className="relative z-10 w-full max-w-md rounded-3xl border border-border bg-card shadow-2xl p-5 md:p-6">
         <div className="flex items-start justify-between gap-4 mb-5">
           <div>
-            <h3 className="text-xl font-semibold">Save to Trip</h3>
+            <h3 className="text-xl font-semibold">{t.saveToTrip.title}</h3>
+
             {placeName && (
               <p className="text-sm text-muted-foreground mt-1">{placeName}</p>
             )}
@@ -245,18 +241,21 @@ export function SaveToTripModal({
         </div>
 
         {loadingTrips ? (
-          <p className="text-sm text-muted-foreground">Loading trips...</p>
+          <p className="text-sm text-muted-foreground">
+            {t.saveToTrip.loadingTrips}
+          </p>
         ) : hasNoTrips ? (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              You do not have any trips yet. Create one first.
+              {t.saveToTrip.noTrips}
             </p>
+
             <Link
               href="/trips"
               onClick={handleClose}
               className="inline-flex text-sm font-medium text-primary hover:opacity-80"
             >
-              Go to trips
+              {t.saveToTrip.goToTrips}
             </Link>
           </div>
         ) : (
@@ -284,11 +283,11 @@ export function SaveToTripModal({
                     {alreadyAdded ? (
                       <span className="inline-flex items-center gap-1 text-xs text-primary font-medium">
                         <Check className="w-3.5 h-3.5" />
-                        Already added
+                        {t.saveToTrip.alreadyAdded}
                       </span>
                     ) : savingToTrip && selectedTripId === trip.id ? (
                       <span className="text-xs text-muted-foreground">
-                        Saving...
+                        {t.saveToTrip.saving}
                       </span>
                     ) : null}
                   </div>

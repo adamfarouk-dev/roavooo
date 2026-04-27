@@ -16,20 +16,11 @@ type DbCity = {
   tagline_fr: string;
   description_en: string;
   description_fr: string;
-  tip_best_time_en: string;
-  tip_best_time_fr: string;
-  tip_packing_en: string;
-  tip_packing_fr: string;
-  tip_etiquette_en: string;
-  tip_etiquette_fr: string;
-  tip_transport_en: string;
-  tip_transport_fr: string;
-  tip_phrases_en: string;
-  tip_phrases_fr: string;
 };
 
 export function Cities() {
-  const { lang } = useLanguage();
+  const { lang, t } = useLanguage();
+
   const [cities, setCities] = useState<DbCity[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -76,31 +67,33 @@ export function Cities() {
     });
   }, [cities, searchQuery]);
 
-  const clearSearch = () => {
-    setSearchQuery("");
-  };
+  const clearSearch = () => setSearchQuery("");
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* HEADER */}
       <div className="mb-12">
         <p className="text-primary text-xs font-semibold uppercase tracking-widest mb-3">
-          Destinations
+          {t.cities.eyebrow}
         </p>
+
         <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4">
-          Explore Cities
+          {t.cities.title}
         </h1>
+
         <p className="text-xl text-muted-foreground max-w-2xl">
-          Discover Morocco’s most exciting destinations, from iconic historic
-          cities to vibrant modern escapes.
+          {t.cities.subtitle}
         </p>
       </div>
 
+      {/* SEARCH */}
       <div className="bg-card p-6 rounded-2xl border border-border shadow-sm mb-10">
         <div className="relative">
           <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+
           <Input
             type="text"
-            placeholder="Search cities..."
+            placeholder={t.search.placeholder}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-12 pr-12 py-6 rounded-xl text-lg bg-muted/50 border-none focus-visible:ring-1 focus-visible:ring-primary"
@@ -119,11 +112,13 @@ export function Cities() {
 
         {!loading && (
           <div className="mt-4 text-sm text-muted-foreground">
-            {filteredCities.length} {filteredCities.length === 1 ? "city" : "cities"} found
+            {filteredCities.length}{" "}
+            {filteredCities.length === 1 ? "city" : "cities"} {t.search.found}
           </div>
         )}
       </div>
 
+      {/* CONTENT */}
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3, 4, 5, 6].map((item) => (
@@ -135,12 +130,16 @@ export function Cities() {
         </div>
       ) : filteredCities.length === 0 ? (
         <div className="rounded-2xl border border-border bg-card p-8 text-center">
-          <h2 className="text-2xl font-semibold mb-2">No cities found</h2>
+          <h2 className="text-2xl font-semibold mb-2">
+            {t.cities.noCitiesTitle}
+          </h2>
+
           <p className="text-muted-foreground mb-6">
-            Try another search term or clear the search to see all cities.
+            {t.cities.noCitiesMessage}
           </p>
+
           <Button variant="outline" onClick={clearSearch}>
-            Clear search
+            {t.search.clearFilters}
           </Button>
         </div>
       ) : (
@@ -168,7 +167,7 @@ export function Cities() {
 
                 <div className="absolute top-4 left-4 inline-flex items-center gap-2 rounded-full bg-black/45 backdrop-blur-md px-3 py-1.5 text-white text-xs border border-white/15">
                   <MapPin className="w-3.5 h-3.5" />
-                  <span>Morocco</span>
+                  <span>{t.cities.morocco}</span>
                 </div>
 
                 <div className="absolute bottom-0 left-0 right-0 p-6">
@@ -181,7 +180,8 @@ export function Cities() {
                   </p>
 
                   <div className="inline-flex items-center gap-2 text-primary text-sm font-semibold">
-                    Explore city <ArrowRight className="w-4 h-4" />
+                    {t.cities.exploreCity}{" "}
+                    <ArrowRight className="w-4 h-4" />
                   </div>
                 </div>
               </Link>

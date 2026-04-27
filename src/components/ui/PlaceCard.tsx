@@ -22,9 +22,8 @@ export function PlaceCard({
   const [saveModalOpen, setSaveModalOpen] = useState(false);
 
   const categoryLabel = t.card.category[place.category] ?? place.category;
-  const translatedPlace = t.place.content?.[
-    place.id as keyof typeof t.place.content
-  ];
+  const translatedPlace =
+    t.place.content?.[place.id as keyof typeof t.place.content];
   const description = translatedPlace?.description ?? place.description;
 
   return (
@@ -59,7 +58,9 @@ export function PlaceCard({
                 ? "bg-primary/20 border border-primary/40"
                 : "bg-black/40 border border-white/20 hover:bg-black/60"
             } ${loading ? "opacity-60 cursor-not-allowed" : ""}`}
-            aria-label={isFav ? "Remove from favorites" : "Add to favorites"}
+            aria-label={
+              isFav ? t.card.removeFromFavorites : t.card.addToFavorites
+            }
             type="button"
           >
             <Heart
@@ -139,7 +140,7 @@ export function PlaceCard({
                 className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-muted transition-colors"
               >
                 <FolderPlus className="w-4 h-4" />
-                Save to Trip
+                {t.card.saveToTrip}
               </button>
             )}
           </div>

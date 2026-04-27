@@ -78,7 +78,10 @@ export function Home() {
       const [{ data: userData }, citiesRes, placesRes] = await Promise.all([
         supabase.auth.getUser(),
         supabase.from("cities").select("*").order("name", { ascending: true }),
-        supabase.from("places").select("*").order("rating", { ascending: false }),
+        supabase
+          .from("places")
+          .select("*")
+          .order("rating", { ascending: false }),
       ]);
 
       setUserId(userData.user?.id ?? null);
@@ -156,8 +159,16 @@ export function Home() {
 
   const CATEGORIES = [
     { label: t.hero.tabs.stays, value: "stay" as const, icon: Bed },
-    { label: t.hero.tabs.experiences, value: "activity" as const, icon: Compass },
-    { label: t.hero.tabs.dining, value: "restaurant" as const, icon: Utensils },
+    {
+      label: t.hero.tabs.experiences,
+      value: "activity" as const,
+      icon: Compass,
+    },
+    {
+      label: t.hero.tabs.dining,
+      value: "restaurant" as const,
+      icon: Utensils,
+    },
   ];
 
   const handleSearch = (e: React.FormEvent) => {
@@ -314,29 +325,29 @@ export function Home() {
       {userId && mappedRecentPlaces.length > 0 && (
         <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
           <div className="flex justify-between items-end mb-10 gap-4">
-          <div>
-            <p className="text-primary text-xs font-semibold uppercase tracking-widest mb-2">
-              Personal
-            </p>
-            <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground flex items-center gap-3">
-              <History className="w-8 h-8 text-primary" />
-              Continue exploring
-            </h2>
-            <p className="text-muted-foreground mt-2 max-w-lg">
-              Jump back into places you recently viewed.
-            </p>
+            <div>
+              <p className="text-primary text-xs font-semibold uppercase tracking-widest mb-2">
+                {t.home.recent.eyebrow}
+              </p>
+              <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground flex items-center gap-3">
+                <History className="w-8 h-8 text-primary" />
+                {t.home.recent.title}
+              </h2>
+              <p className="text-muted-foreground mt-2 max-w-lg">
+                {t.home.recent.subtitle}
+              </p>
+            </div>
+
+            <Link
+              href="/recent"
+              className="hidden md:flex items-center gap-1.5 text-sm text-primary font-semibold hover:gap-2.5 transition-all"
+            >
+              {t.home.recent.viewAll} <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
 
-          <Link
-            href="/recent"
-            className="hidden md:flex items-center gap-1.5 text-sm text-primary font-semibold hover:gap-2.5 transition-all"
-          >
-            View all <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mappedRecentPlaces.map((place, i) => (
+            {mappedRecentPlaces.slice(0, 3).map((place, i) => (
               <motion.div
                 key={place.id}
                 initial={{ opacity: 0, y: 16 }}
@@ -354,7 +365,7 @@ export function Home() {
               href="/recent"
               className="inline-flex items-center gap-2 text-sm text-primary font-semibold border border-primary/40 px-6 py-3 rounded-full hover:bg-primary/5 transition-colors"
             >
-              View all <ArrowRight className="w-4 h-4" />
+              {t.home.recent.viewAll} <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
         </section>
@@ -375,7 +386,7 @@ export function Home() {
             href="/cities"
             className="hidden md:flex items-center gap-1.5 text-sm text-primary font-semibold hover:gap-2.5 transition-all"
           >
-            View all <ArrowRight className="w-4 h-4" />
+            {t.home.destinations.viewAll} <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
 
@@ -419,7 +430,8 @@ export function Home() {
                     </p>
 
                     <div className="mt-3 flex items-center gap-1 text-primary text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-400 delay-75">
-                      {t.home.destinations.exploreCity} <ArrowRight className="w-4 h-4" />
+                      {t.home.destinations.exploreCity}{" "}
+                      <ArrowRight className="w-4 h-4" />
                     </div>
                   </div>
                 </motion.div>
@@ -431,7 +443,8 @@ export function Home() {
                 href="/cities"
                 className="inline-flex items-center gap-2 text-sm text-primary font-semibold border border-primary/40 px-6 py-3 rounded-full hover:bg-primary/5 transition-colors"
               >
-                View all <ArrowRight className="w-4 h-4" />
+                {t.home.destinations.viewAll}{" "}
+                <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
           </>
@@ -562,7 +575,9 @@ export function Home() {
           </div>
         ) : (
           <div className="rounded-2xl border border-border bg-card p-8 text-center">
-            <p className="text-muted-foreground">No experiences available yet.</p>
+            <p className="text-muted-foreground">
+              No experiences available yet.
+            </p>
           </div>
         )}
       </section>
@@ -622,7 +637,9 @@ export function Home() {
             </div>
           ) : (
             <div className="rounded-2xl border border-border bg-card p-8 text-center">
-              <p className="text-muted-foreground">No dining spots available yet.</p>
+              <p className="text-muted-foreground">
+                No dining spots available yet.
+              </p>
             </div>
           )}
 
@@ -631,7 +648,8 @@ export function Home() {
               href="/search?category=restaurant"
               className="inline-flex items-center gap-2 text-sm text-primary font-semibold border border-primary/40 px-6 py-3 rounded-full hover:bg-primary/5 transition-colors"
             >
-              {t.home.dining.viewAllMobile} <ArrowRight className="w-4 h-4" />
+              {t.home.dining.viewAllMobile}{" "}
+              <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
         </div>
