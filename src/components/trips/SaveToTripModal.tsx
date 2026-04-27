@@ -4,6 +4,7 @@ import { X, Check } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useLocation } from "wouter";
 
 type Trip = {
   id: string;
@@ -36,6 +37,7 @@ export function SaveToTripModal({
   onClose,
 }: SaveToTripModalProps) {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const { t } = useLanguage();
 
   const [userTrips, setUserTrips] = useState<Trip[]>([]);
@@ -71,12 +73,9 @@ export function SaveToTripModal({
       const user = userData.user;
 
       if (!user) {
-        toast({
-          variant: "destructive",
-          title: t.saveToTrip.loginRequired,
-        });
         setLoadingTrips(false);
         onClose();
+        setLocation("/login");
         return;
       }
 

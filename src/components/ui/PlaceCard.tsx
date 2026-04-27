@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Heart, MapPin, Star, FolderPlus } from "lucide-react";
 import { Place } from "@/lib/data";
 import { useFavorites } from "@/hooks/use-favorites";
@@ -15,16 +15,29 @@ export function PlaceCard({
   place,
   showSaveToTrip = false,
 }: PlaceCardProps) {
-  const { isFavorite, toggleFavorite, loading } = useFavorites();
+  const [, setLocation] = useLocation();
+  const { isFavorite, toggleFavorite, loading, user } = useFavorites();
   const { t } = useLanguage();
-  const isFav = isFavorite(place.id);
 
+  const isFav = isFavorite(place.id);
   const [saveModalOpen, setSaveModalOpen] = useState(false);
 
   const categoryLabel = t.card.category[place.category] ?? place.category;
   const translatedPlace =
     t.place.content?.[place.id as keyof typeof t.place.content];
   const description = translatedPlace?.description ?? place.description;
+
+  const handleSaveToTripClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!user) {
+      setLocation("/login");
+      return;
+    }
+
+    setSaveModalOpen(true);
+  };
 
   return (
     <>
@@ -50,6 +63,12 @@ export function PlaceCard({
             onClick={async (e) => {
               e.preventDefault();
               e.stopPropagation();
+
+              if (!user) {
+                setLocation("/login");
+                return;
+              }
+
               await toggleFavorite(place.id);
             }}
             disabled={loading}
@@ -132,11 +151,7 @@ export function PlaceCard({
             {showSaveToTrip && (
               <button
                 type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setSaveModalOpen(true);
-                }}
+                onClick={handleSaveToTripClick}
                 className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-muted transition-colors"
               >
                 <FolderPlus className="w-4 h-4" />

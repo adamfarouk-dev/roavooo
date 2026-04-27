@@ -49,7 +49,10 @@ export function Trips() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [cities, setCities] = useState<City[]>([]);
   const [loading, setLoading] = useState(true);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [creating, setCreating] = useState(false);
+
   const [tripPlaceCounts, setTripPlaceCounts] = useState<Record<string, number>>(
     {}
   );
@@ -78,10 +81,14 @@ export function Trips() {
   };
 
   const fetchTrips = async () => {
+    setLoading(true);
+
     const { data: userData, error: userError } = await supabase.auth.getUser();
 
     if (userError) {
       console.error("Error fetching user:", userError);
+      setIsLoggedIn(false);
+      setAuthChecked(true);
       setLoading(false);
       return;
     }
@@ -89,9 +96,14 @@ export function Trips() {
     const user = userData.user;
 
     if (!user) {
+      setIsLoggedIn(false);
+      setAuthChecked(true);
       setLoading(false);
       return;
     }
+
+    setIsLoggedIn(true);
+    setAuthChecked(true);
 
     const [tripsRes, citiesRes, tripPlacesRes] = await Promise.all([
       supabase
@@ -115,18 +127,22 @@ export function Trips() {
 
     if (tripsRes.error) {
       console.error("Error fetching trips:", tripsRes.error);
+      setTrips([]);
     } else {
       setTrips((tripsRes.data ?? []) as Trip[]);
     }
 
     if (citiesRes.error) {
       console.error("Error fetching cities:", citiesRes.error);
+      setCities([]);
     } else {
       setCities((citiesRes.data ?? []) as City[]);
     }
 
     if (tripPlacesRes.error) {
       console.error("Error fetching trip places:", tripPlacesRes.error);
+      setTripPlaceCounts({});
+      setTripCoverImages({});
     } else {
       const counts: Record<string, number> = {};
       const covers: Record<string, string> = {};
@@ -243,8 +259,40 @@ export function Trips() {
     });
   };
 
-  if (loading) {
-    return <div className="p-6 max-w-6xl mx-auto">Loading...</div>;
+  if (!authChecked || loading) {
+    return (
+      <div className="p-6 max-w-6xl mx-auto">
+        {t.trips.loading || "Loading..."}
+      </div>
+    );
+  }
+
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-[70vh] max-w-7xl mx-auto px-4 py-16 text-center">
+        <h1 className="text-4xl font-serif font-bold mb-4">
+          {t.trips.title}
+        </h1>
+
+        <p className="text-muted-foreground mb-6">
+          {t.profile.subtitle}
+        </p>
+
+        <div className="flex justify-center gap-3">
+          <Link href="/login">
+            <button className="px-5 py-3 bg-primary text-white rounded-lg font-semibold hover:opacity-90 transition-opacity">
+              {t.profile.logIn}
+            </button>
+          </Link>
+
+          <Link href="/signup">
+            <button className="px-5 py-3 border border-border rounded-lg font-semibold hover:bg-muted transition-colors">
+              {t.profile.signUp}
+            </button>
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -344,7 +392,8 @@ export function Trips() {
 
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>
-                      {t.trips.created} {formatDate(trip.created_at) || t.trips.unknownDate}
+                      {t.trips.created}{" "}
+                      {formatDate(trip.created_at) || t.trips.unknownDate}
                     </span>
                     <span className="text-primary font-medium">
                       {t.trips.openTrip} →
@@ -413,7 +462,7 @@ export function Trips() {
           disabled={creating}
           className="px-5 py-3 bg-primary text-white rounded-lg font-semibold hover:opacity-90 disabled:opacity-60"
         >
-          {creating ? "Creating..." : t.trips.createNewTrip}
+          {creating ? t.trips.creating : t.trips.createNewTrip}
         </button>
       </div>
     </div>
