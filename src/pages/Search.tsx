@@ -37,6 +37,9 @@ type DbPlace = {
   cuisine: string | null;
 };
 
+type PriceFilter = "all" | "under-500" | "500-1000" | "1000-plus";
+type SortFilter = "recommended" | "highest-rated" | "lowest-price" | "alphabetical";
+
 export function Search() {
   const [location, setLocation] = useLocation();
   const { t, lang } = useLanguage();
@@ -49,6 +52,9 @@ export function Search() {
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [cityFilter, setCityFilter] = useState<string>("all");
+  const [ratingFilter, setRatingFilter] = useState<string>("all");
+  const [priceFilter, setPriceFilter] = useState<PriceFilter>("all");
+  const [sortFilter, setSortFilter] = useState<SortFilter>("recommended");
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -56,6 +62,9 @@ export function Search() {
     setSearchQuery(params.get("q") || "");
     setCategoryFilter(params.get("category") || "all");
     setCityFilter(params.get("city") || "all");
+    setRatingFilter(params.get("rating") || "all");
+    setPriceFilter((params.get("price") as PriceFilter) || "all");
+    setSortFilter((params.get("sort") as SortFilter) || "recommended");
   }, [location]);
 
   useEffect(() => {
@@ -97,23 +106,52 @@ export function Search() {
     fetchSearchData();
   }, [toast]);
 
-  const updateUrlParams = (
-    nextQuery: string,
-    nextCategory: string,
-    nextCity: string
-  ) => {
+  const updateUrlParams = ({
+    nextQuery = searchQuery,
+    nextCategory = categoryFilter,
+    nextCity = cityFilter,
+    nextRating = ratingFilter,
+    nextPrice = priceFilter,
+    nextSort = sortFilter,
+  }: {
+    nextQuery?: string;
+    nextCategory?: string;
+    nextCity?: string;
+    nextRating?: string;
+    nextPrice?: PriceFilter;
+    nextSort?: SortFilter;
+  }) => {
     const params = new URLSearchParams();
 
     if (nextQuery.trim()) params.set("q", nextQuery.trim());
     if (nextCategory !== "all") params.set("category", nextCategory);
     if (nextCity !== "all") params.set("city", nextCity);
+    if (nextRating !== "all") params.set("rating", nextRating);
+    if (nextPrice !== "all") params.set("price", nextPrice);
+    if (nextSort !== "recommended") params.set("sort", nextSort);
 
     const queryString = params.toString();
     setLocation(queryString ? `/search?${queryString}` : "/search");
   };
 
   const filteredPlaces = useMemo(() => {
-    return places.filter((place) => {
+    const minRating = ratingFilter === "all" ? 0 : Number(ratingFilter);
+
+    const matchesPrice = (place: DbPlace) => {
+      if (priceFilter === "all") return true;
+      if (place.category !== "stay") return true;
+      if (place.price_per_night == null) return false;
+
+      if (priceFilter === "under-500") return place.price_per_night < 500;
+      if (priceFilter === "500-1000") {
+        return place.price_per_night >= 500 && place.price_per_night <= 1000;
+      }
+      if (priceFilter === "1000-plus") return place.price_per_night >= 1000;
+
+      return true;
+    };
+
+    const filtered = places.filter((place) => {
       const city = cities.find((c) => c.id === place.city_id);
 
       const searchableText = [
@@ -132,10 +170,38 @@ export function Search() {
       const matchesCategory =
         categoryFilter === "all" || place.category === categoryFilter;
       const matchesCity = cityFilter === "all" || place.city_id === cityFilter;
+      const matchesRating = place.rating >= minRating;
 
-      return matchesSearch && matchesCategory && matchesCity;
+      return (
+        matchesSearch &&
+        matchesCategory &&
+        matchesCity &&
+        matchesRating &&
+        matchesPrice(place)
+      );
     });
-  }, [places, cities, searchQuery, categoryFilter, cityFilter]);
+
+    return [...filtered].sort((a, b) => {
+      if (sortFilter === "highest-rated") return b.rating - a.rating;
+      if (sortFilter === "alphabetical") return a.name.localeCompare(b.name);
+      if (sortFilter === "lowest-price") {
+        const aPrice = a.price_per_night ?? Number.POSITIVE_INFINITY;
+        const bPrice = b.price_per_night ?? Number.POSITIVE_INFINITY;
+        return aPrice - bPrice || b.rating - a.rating;
+      }
+
+      return b.rating - a.rating;
+    });
+  }, [
+    places,
+    cities,
+    searchQuery,
+    categoryFilter,
+    cityFilter,
+    ratingFilter,
+    priceFilter,
+    sortFilter,
+  ]);
 
   const mappedPlaces = filteredPlaces.map((place) => ({
     id: place.id,
@@ -157,6 +223,9 @@ export function Search() {
     setSearchQuery("");
     setCategoryFilter("all");
     setCityFilter("all");
+    setRatingFilter("all");
+    setPriceFilter("all");
+    setSortFilter("recommended");
     setLocation("/search");
   };
 
@@ -215,7 +284,7 @@ export function Search() {
             onChange={(e) => {
               const nextValue = e.target.value;
               setSearchQuery(nextValue);
-              updateUrlParams(nextValue, categoryFilter, cityFilter);
+              updateUrlParams({ nextQuery: nextValue });
             }}
             className="pl-12 py-6 rounded-xl text-lg bg-muted/50 border-none focus-visible:ring-1 focus-visible:ring-primary"
           />
@@ -226,12 +295,12 @@ export function Search() {
           <span className="text-sm text-muted-foreground">Filters</span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
           <Select
             value={cityFilter}
             onValueChange={(value) => {
               setCityFilter(value);
-              updateUrlParams(searchQuery, categoryFilter, value);
+              updateUrlParams({ nextCity: value });
             }}
           >
             <SelectTrigger className="w-full py-6 rounded-xl bg-muted/50 border-none">
@@ -251,7 +320,7 @@ export function Search() {
             value={categoryFilter}
             onValueChange={(value) => {
               setCategoryFilter(value);
-              updateUrlParams(searchQuery, value, cityFilter);
+              updateUrlParams({ nextCategory: value });
             }}
           >
             <SelectTrigger className="w-full py-6 rounded-xl bg-muted/50 border-none">
@@ -264,9 +333,68 @@ export function Search() {
               <SelectItem value="restaurant">{t.search.diningLabel}</SelectItem>
             </SelectContent>
           </Select>
+
+          <Select
+            value={ratingFilter}
+            onValueChange={(value) => {
+              setRatingFilter(value);
+              updateUrlParams({ nextRating: value });
+            }}
+          >
+            <SelectTrigger className="w-full py-6 rounded-xl bg-muted/50 border-none">
+              <SelectValue placeholder="All ratings" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All ratings</SelectItem>
+              <SelectItem value="4">4.0+</SelectItem>
+              <SelectItem value="4.5">4.5+</SelectItem>
+              <SelectItem value="4.8">4.8+</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={priceFilter}
+            onValueChange={(value: PriceFilter) => {
+              setPriceFilter(value);
+              updateUrlParams({ nextPrice: value });
+            }}
+          >
+            <SelectTrigger className="w-full py-6 rounded-xl bg-muted/50 border-none">
+              <SelectValue placeholder="All prices" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All prices</SelectItem>
+              <SelectItem value="under-500">Under 500 MAD</SelectItem>
+              <SelectItem value="500-1000">500-1000 MAD</SelectItem>
+              <SelectItem value="1000-plus">1000+ MAD</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={sortFilter}
+            onValueChange={(value: SortFilter) => {
+              setSortFilter(value);
+              updateUrlParams({ nextSort: value });
+            }}
+          >
+            <SelectTrigger className="w-full py-6 rounded-xl bg-muted/50 border-none">
+              <SelectValue placeholder="Recommended" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="recommended">Recommended</SelectItem>
+              <SelectItem value="highest-rated">Highest rated</SelectItem>
+              <SelectItem value="lowest-price">Lowest price</SelectItem>
+              <SelectItem value="alphabetical">Alphabetical</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
-        {(searchQuery || categoryFilter !== "all" || cityFilter !== "all") && (
+        {(searchQuery ||
+          categoryFilter !== "all" ||
+          cityFilter !== "all" ||
+          ratingFilter !== "all" ||
+          priceFilter !== "all" ||
+          sortFilter !== "recommended") && (
           <div className="mt-4">
             <Button variant="outline" onClick={clearFilters}>
               <X className="w-4 h-4 mr-2" />
