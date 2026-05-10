@@ -7,6 +7,8 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { AdminRoute } from "@/components/auth/AdminRoute";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 import { Home } from "@/pages/Home";
 import { City } from "@/pages/City";
@@ -58,23 +60,79 @@ function AppShell() {
           <Route path="/city/:slug" component={City} />
 
           <Route path="/place/:id" component={Place} />
-          <Route path="/favorites" component={Favorites} />
+          <Route path="/favorites">
+            <ProtectedRoute>
+              <Favorites />
+            </ProtectedRoute>
+          </Route>
           <Route path="/recent" component={Recent} />
           <Route path="/search" component={Search} />
 
-          <Route path="/trips" component={Trips} />
-          <Route path="/trips/:id" component={TripDetails} />
+          <Route path="/trips">
+            <ProtectedRoute>
+              <Trips />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/trips/:id">
+            <ProtectedRoute>
+              <TripDetails />
+            </ProtectedRoute>
+          </Route>
 
-          <Route path="/profile" component={Profile} />
+          <Route path="/profile">
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          </Route>
           <Route path="/login" component={Login} />
           <Route path="/signup" component={Signup} />
 
           <Route path="/admin/login" component={AdminLogin} />
-          <Route path="/admin" component={AdminDashboard} />
-          <Route path="/admin/places/new" component={AdminNewPlace} />
-          <Route path="/admin/places/:id/edit" component={AdminEditPlace} />
-          <Route path="/admin/cities/new" component={AdminNewCity} />
-          <Route path="/admin/cities/:id/edit" component={AdminEditCity} />
+          <Route path="/admin">
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
+          </Route>
+          <Route path="/admin/new-place">
+            <AdminRoute>
+              <AdminNewPlace />
+            </AdminRoute>
+          </Route>
+          <Route path="/admin/places/new">
+            <AdminRoute>
+              <AdminNewPlace />
+            </AdminRoute>
+          </Route>
+          <Route path="/admin/edit-place/:id">
+            <AdminRoute>
+              <AdminEditPlace />
+            </AdminRoute>
+          </Route>
+          <Route path="/admin/places/:id/edit">
+            <AdminRoute>
+              <AdminEditPlace />
+            </AdminRoute>
+          </Route>
+          <Route path="/admin/new-city">
+            <AdminRoute>
+              <AdminNewCity />
+            </AdminRoute>
+          </Route>
+          <Route path="/admin/cities/new">
+            <AdminRoute>
+              <AdminNewCity />
+            </AdminRoute>
+          </Route>
+          <Route path="/admin/edit-city/:id">
+            <AdminRoute>
+              <AdminEditCity />
+            </AdminRoute>
+          </Route>
+          <Route path="/admin/cities/:id/edit">
+            <AdminRoute>
+              <AdminEditCity />
+            </AdminRoute>
+          </Route>
 
           <Route component={NotFound} />
         </Switch>
