@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useFavorites } from "@/hooks/use-favorites";
 import { PlaceCard } from "@/components/ui/PlaceCard";
-import { Heart, Loader2, Lock } from "lucide-react";
+import { Heart, Lock } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/lib/supabase";
+import { PageHeaderSkeleton, PlaceGridSkeleton } from "@/components/ui/loading-states";
 
 type DbPlace = {
   id: string;
@@ -78,11 +79,9 @@ export function Favorites() {
 
   if (favoritesLoading) {
     return (
-      <div className="min-h-[70vh] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 flex items-center justify-center">
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Loader2 className="w-5 h-5 animate-spin" />
-          <span>{t.trips.loading}</span>
-        </div>
+      <div className="min-h-[70vh] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <PageHeaderSkeleton />
+        <PlaceGridSkeleton />
       </div>
     );
   }
@@ -131,10 +130,7 @@ export function Favorites() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Loader2 className="w-5 h-5 animate-spin" />
-          <span>{t.trips.loading}</span>
-        </div>
+        <PlaceGridSkeleton />
       </div>
     );
   }

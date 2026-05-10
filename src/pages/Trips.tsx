@@ -13,6 +13,8 @@ import {
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { PageHeaderSkeleton, TripGridSkeleton } from "@/components/ui/loading-states";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Trip = {
   id: string;
@@ -254,10 +256,22 @@ export function Trips() {
 
   if (!authChecked || loading) {
     return (
-      <div className="min-h-[70vh] p-6 max-w-6xl mx-auto flex items-center justify-center">
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Loader2 className="w-5 h-5 animate-spin" />
-          <span>{t.trips.loading || "Loading..."}</span>
+      <div className="p-6 max-w-6xl mx-auto">
+        <PageHeaderSkeleton />
+        <TripGridSkeleton />
+        <div className="rounded-3xl border border-border bg-card p-5 md:p-6">
+          <div className="flex items-center gap-2 mb-5">
+            <Skeleton className="h-5 w-5 rounded-full" />
+            <Skeleton className="h-6 w-40" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <Skeleton className="h-12 w-full rounded-lg" />
+            <Skeleton className="h-12 w-full rounded-lg" />
+            <Skeleton className="h-12 w-full rounded-lg" />
+            <Skeleton className="h-12 w-full rounded-lg" />
+          </div>
+          <Skeleton className="h-28 w-full rounded-lg mb-4" />
+          <Skeleton className="h-12 w-40 rounded-xl" />
         </div>
       </div>
     );

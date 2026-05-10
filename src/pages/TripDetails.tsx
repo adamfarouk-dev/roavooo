@@ -19,6 +19,7 @@ import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Trip = {
   id: string;
@@ -624,7 +625,49 @@ export function TripDetails() {
   };
 
   if (loading) {
-    return <div className="p-6 max-w-6xl mx-auto">{t.trips.loading}</div>;
+    return (
+      <div className="p-6 max-w-6xl mx-auto">
+        <Skeleton className="h-5 w-28 mb-6" />
+        <div className="rounded-2xl border border-border bg-card p-5 md:p-6 mb-8">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+            <div className="flex-1 space-y-4">
+              <Skeleton className="h-9 w-64 max-w-full" />
+              <div className="flex flex-wrap gap-3">
+                <Skeleton className="h-8 w-28 rounded-full" />
+                <Skeleton className="h-8 w-36 rounded-full" />
+                <Skeleton className="h-8 w-32 rounded-full" />
+              </div>
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-2/3" />
+            </div>
+            <div className="flex gap-3">
+              <Skeleton className="h-10 w-28 rounded-xl" />
+              <Skeleton className="h-10 w-28 rounded-xl" />
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {[1, 2, 3, 4].map((item) => (
+            <div
+              key={item}
+              className="rounded-2xl border border-border bg-card overflow-hidden"
+            >
+              <Skeleton className="h-52 w-full rounded-none" />
+              <div className="p-4 space-y-3">
+                <Skeleton className="h-6 w-2/3" />
+                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-24 w-full rounded-xl" />
+                <div className="flex gap-3">
+                  <Skeleton className="h-10 flex-1 rounded-xl" />
+                  <Skeleton className="h-10 flex-1 rounded-xl" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   if (!trip) {
@@ -816,7 +859,7 @@ export function TripDetails() {
 
           <Link
             href="/search"
-            className="inline-flex mt-4 text-sm font-medium text-primary hover:opacity-80"
+            className="inline-flex mt-4 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground hover:opacity-90 active:scale-[0.98] transition-all"
           >
             {t.tripDetails.explorePlaces}
           </Link>

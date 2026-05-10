@@ -13,6 +13,9 @@ import NotFound from "./not-found";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/lib/supabase";
+import { Button } from "@/components/ui/button";
+import { PageHeaderSkeleton, PlaceGridSkeleton } from "@/components/ui/loading-states";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type DbCity = {
   id: string;
@@ -82,7 +85,15 @@ export function City() {
   const city = cities.find((c) => c.slug === slug);
 
   if (loading) {
-    return <div className="w-full min-h-screen bg-background" />;
+    return (
+      <div className="w-full max-w-full overflow-x-hidden bg-background pb-24">
+        <Skeleton className="h-[60vh] min-h-[400px] w-full rounded-none" />
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
+          <PageHeaderSkeleton />
+          <PlaceGridSkeleton />
+        </div>
+      </div>
+    );
   }
 
   if (!city) return <NotFound />;
@@ -116,6 +127,20 @@ export function City() {
     transport: lang === "fr" ? city.tip_transport_fr : city.tip_transport_en,
     phrases: lang === "fr" ? city.tip_phrases_fr : city.tip_phrases_en,
   };
+
+  const renderEmptyPlaces = (label: string) => (
+    <div className="rounded-2xl border border-border bg-card p-8 text-center">
+      <h3 className="text-xl font-serif font-semibold mb-2">
+        No {label.toLowerCase()} yet
+      </h3>
+      <p className="text-muted-foreground mb-5">
+        Explore more places while we add new recommendations for {city.name}.
+      </p>
+      <Link href="/search">
+        <Button variant="outline">{t.trips.explorePlaces}</Button>
+      </Link>
+    </div>
+  );
 
   return (
     <div className="w-full max-w-full overflow-x-hidden bg-background pb-24">
@@ -204,33 +229,45 @@ export function City() {
             value="stays"
             className="space-y-8 animate-in fade-in duration-500"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {stays.map((place) => (
-                <PlaceCard key={place.id} place={place} showSaveToTrip />
-              ))}
-            </div>
+            {stays.length === 0 ? (
+              renderEmptyPlaces(t.city.tabs.stays)
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {stays.map((place) => (
+                  <PlaceCard key={place.id} place={place} showSaveToTrip />
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent
             value="activities"
             className="space-y-8 animate-in fade-in duration-500"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {activities.map((place) => (
-                <PlaceCard key={place.id} place={place} showSaveToTrip />
-              ))}
-            </div>
+            {activities.length === 0 ? (
+              renderEmptyPlaces(t.city.tabs.experiences)
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {activities.map((place) => (
+                  <PlaceCard key={place.id} place={place} showSaveToTrip />
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent
             value="restaurants"
             className="space-y-8 animate-in fade-in duration-500"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {restaurants.map((place) => (
-                <PlaceCard key={place.id} place={place} showSaveToTrip />
-              ))}
-            </div>
+            {restaurants.length === 0 ? (
+              renderEmptyPlaces(t.city.tabs.dining)
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {restaurants.map((place) => (
+                  <PlaceCard key={place.id} place={place} showSaveToTrip />
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="tips" className="animate-in fade-in duration-500">

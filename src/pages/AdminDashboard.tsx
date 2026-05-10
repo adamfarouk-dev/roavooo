@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useLocation } from "wouter";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type DbPlace = {
   id: string;
@@ -185,7 +186,43 @@ export function AdminDashboard() {
     setLocation("/admin/login");
   };
 
-  if (loading) return <div className="p-10">Loading...</div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background px-6 py-10">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between mb-8">
+            <div>
+              <Skeleton className="h-10 w-72 mb-3" />
+              <Skeleton className="h-5 w-96 max-w-full" />
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Skeleton className="h-10 w-20 rounded-lg" />
+              <Skeleton className="h-10 w-20 rounded-lg" />
+              <Skeleton className="h-10 w-24 rounded-lg" />
+              <Skeleton className="h-10 w-24 rounded-lg" />
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-border bg-card overflow-hidden">
+            <Skeleton className="h-14 w-full rounded-none" />
+            {[1, 2, 3, 4, 5].map((item) => (
+              <div
+                key={item}
+                className="grid grid-cols-6 gap-4 px-6 py-4 border-b border-border"
+              >
+                <Skeleton className="h-5" />
+                <Skeleton className="h-5" />
+                <Skeleton className="h-5" />
+                <Skeleton className="h-5" />
+                <Skeleton className="h-5" />
+                <Skeleton className="h-8" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background px-6 py-10">
@@ -335,8 +372,17 @@ export function AdminDashboard() {
             ))}
 
             {places.length === 0 && (
-              <div className="px-6 py-10 text-muted-foreground text-sm">
-                No places yet.
+              <div className="px-6 py-10 text-center">
+                <p className="text-muted-foreground text-sm mb-4">
+                  No places yet.
+                </p>
+                <button
+                  onClick={() => setLocation("/admin/places/new")}
+                  className="bg-primary text-white px-4 py-2 rounded-lg font-semibold"
+                  type="button"
+                >
+                  New Place
+                </button>
               </div>
             )}
           </div>
@@ -379,8 +425,17 @@ export function AdminDashboard() {
             ))}
 
             {cities.length === 0 && (
-              <div className="px-6 py-10 text-muted-foreground text-sm">
-                No cities yet.
+              <div className="px-6 py-10 text-center">
+                <p className="text-muted-foreground text-sm mb-4">
+                  No cities yet.
+                </p>
+                <button
+                  onClick={() => setLocation("/admin/cities/new")}
+                  className="bg-primary text-white px-4 py-2 rounded-lg font-semibold"
+                  type="button"
+                >
+                  New City
+                </button>
               </div>
             )}
           </div>
