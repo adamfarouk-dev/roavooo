@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { PageHeaderSkeleton, PlaceGridSkeleton } from "@/components/ui/loading-states";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SafeImage } from "@/components/ui/safe-image";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 
 type DbCity = {
   id: string;
@@ -84,6 +85,7 @@ export function City() {
   }, []);
 
   const city = cities.find((c) => c.slug === slug);
+  useDocumentTitle(city ? `${city.name} Travel Guide - Roavooo` : undefined);
 
   if (loading) {
     return (

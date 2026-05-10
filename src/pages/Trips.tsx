@@ -16,6 +16,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { PageHeaderSkeleton, TripGridSkeleton } from "@/components/ui/loading-states";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SafeImage } from "@/components/ui/safe-image";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 
 type Trip = {
   id: string;
@@ -51,6 +52,7 @@ export function Trips() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { t } = useLanguage();
+  useDocumentTitle("My Trips - Roavooo");
 
   const [trips, setTrips] = useState<Trip[]>([]);
   const [cities, setCities] = useState<City[]>([]);

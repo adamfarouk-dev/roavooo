@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useLocation } from "wouter";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 
 type DbPlace = {
   id: string;
@@ -50,6 +51,7 @@ type UserEvent = {
 
 export function AdminDashboard() {
   const [, setLocation] = useLocation();
+  useDocumentTitle("Admin Dashboard - Roavooo");
 
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<

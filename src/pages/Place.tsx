@@ -18,6 +18,7 @@ import { SaveToTripModal } from "@/components/trips/SaveToTripModal";
 import { PlaceGridSkeleton } from "@/components/ui/loading-states";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SafeImage } from "@/components/ui/safe-image";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 
 type DbCity = {
   id: string;
@@ -80,6 +81,7 @@ export function Place() {
     () => places.find((p) => p.id === id),
     [places, id]
   );
+  useDocumentTitle(dbPlace ? `${dbPlace.name} - Roavooo` : undefined);
 
   useEffect(() => {
     const trackRecentlyViewed = async () => {

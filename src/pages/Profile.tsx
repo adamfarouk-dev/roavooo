@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SafeImage } from "@/components/ui/safe-image";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 
 type ProfileStats = {
   tripsCount: number;
@@ -35,6 +36,7 @@ type ProfileRow = {
 export function Profile() {
   const { toast } = useToast();
   const { t } = useLanguage();
+  useDocumentTitle("My Profile - Roavooo");
 
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);

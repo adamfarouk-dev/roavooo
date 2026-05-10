@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/lib/supabase";
 import { SafeImage } from "@/components/ui/safe-image";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 
 type DbCity = {
   id: string;
@@ -61,6 +62,7 @@ type RecentViewRow = {
 export function Home() {
   const [, setLocation] = useLocation();
   const { t, lang } = useLanguage();
+  useDocumentTitle("Roavooo - Discover Morocco");
 
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<

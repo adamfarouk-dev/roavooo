@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/lib/supabase";
 import { PageHeaderSkeleton, PlaceGridSkeleton } from "@/components/ui/loading-states";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 
 type DbPlace = {
   id: string;
@@ -26,6 +27,7 @@ type DbPlace = {
 export function Favorites() {
   const { favorites, user, loading: favoritesLoading } = useFavorites();
   const { t, lang } = useLanguage();
+  useDocumentTitle("My Favorites - Roavooo");
 
   const [places, setPlaces] = useState<DbPlace[]>([]);
   const [loadingPlaces, setLoadingPlaces] = useState(false);
