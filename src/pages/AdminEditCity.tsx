@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { useLocation, useParams } from "wouter";
 
 export function AdminEditCity() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const [loading, setLoading] = useState(true);
 

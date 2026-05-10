@@ -51,7 +51,7 @@ type DbPlace = {
 };
 
 export function City() {
-  const { slug } = useParams();
+  const { slug } = useParams<{ slug: string }>();
   const { t, lang } = useLanguage();
 
   const [cities, setCities] = useState<DbCity[]>([]);

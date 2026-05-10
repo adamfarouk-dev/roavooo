@@ -39,7 +39,7 @@ type DbPlace = {
 };
 
 export function Place() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const { isFavorite, toggleFavorite } = useFavorites();
   const { t, lang } = useLanguage();
 

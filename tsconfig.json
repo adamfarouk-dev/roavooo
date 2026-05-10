@@ -2,15 +2,24 @@
   "include": ["src/**/*"],
   "exclude": ["node_modules", "build", "dist", "**/*.test.ts"],
   "compilerOptions": {
+    "target": "ES2022",
     "noEmit": true,
     "jsx": "react-jsx",
-    "lib": ["esnext", "dom", "dom.iterable"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
     "resolveJsonModule": true,
     "allowImportingTsExtensions": true,
-    "moduleResolution": "bundler",
+    "moduleResolution": "Bundler",
     "types": ["node", "vite/client"],
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@supabase/phoenix/priv/static/types/timer": [
+        "./node_modules/@supabase/phoenix/priv/static/types/timer.d.ts"
+      ],
+      "@supabase/phoenix/priv/static/types/types": [
+        "./node_modules/@supabase/phoenix/priv/static/types/types.d.ts"
+      ]
     }
   }
 }

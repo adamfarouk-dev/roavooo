@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useLocation, useRoute } from "wouter";
+import { Link, useLocation, useParams } from "wouter";
 import {
   ArrowLeft,
   MapPin,
@@ -62,8 +62,7 @@ type TripPlaceRow = {
 
 export function TripDetails() {
   const [, setLocation] = useLocation();
-  const [, params] = useRoute("/trips/:id");
-  const tripId = params?.id;
+  const { id: tripId } = useParams<{ id: string }>();
   const { toast } = useToast();
   const { t } = useLanguage();
 

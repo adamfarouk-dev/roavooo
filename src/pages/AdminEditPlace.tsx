@@ -8,7 +8,7 @@ type DbCity = {
 };
 
 export function AdminEditPlace() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
 
   const [loading, setLoading] = useState(true);
