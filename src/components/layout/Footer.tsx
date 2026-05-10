@@ -1,6 +1,7 @@
 import { Link } from 'wouter';
 import { CITIES } from '@/lib/data';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { SafeImage } from '@/components/ui/safe-image';
 
 export function Footer() {
   const { t } = useLanguage();
@@ -11,7 +12,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="col-span-1 md:col-span-2">
             <Link href="/" className="flex items-center shrink-0">
-              <img
+              <SafeImage
                 src="/ROAVOOO_WHITE.png"
                 alt="Roavooo"
                 className="h-20 md:h-24 w-auto object-contain"

@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SafeImage } from "@/components/ui/safe-image";
 
 type ProfileStats = {
   tripsCount: number;
@@ -338,7 +339,7 @@ export function Profile() {
             <div className="mb-5">
               <label className="relative block w-20 h-20 cursor-pointer group">
                 {profile?.avatar_url ? (
-                  <img
+                  <SafeImage
                     src={profile.avatar_url}
                     alt={displayName}
                     className="w-20 h-20 rounded-full object-cover border border-border"

@@ -6,6 +6,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/lib/supabase";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { SafeImage } from "@/components/ui/safe-image";
 
 type DbCity = {
   id: string;
@@ -156,7 +157,7 @@ export function Cities() {
                 href={`/city/${city.slug}`}
                 className="group relative block aspect-[3/4] rounded-2xl overflow-hidden"
               >
-                <img
+                <SafeImage
                   src={city.image_url}
                   alt={city.name}
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"

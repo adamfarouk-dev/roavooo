@@ -6,6 +6,7 @@ import { useFavorites } from "@/hooks/use-favorites";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { SaveToTripModal } from "@/components/trips/SaveToTripModal";
 import { supabase } from "@/lib/supabase";
+import { SafeImage } from "@/components/ui/safe-image";
 
 interface PlaceCardProps {
   place: Place;
@@ -101,11 +102,10 @@ export function PlaceCard({
             onClick={handleGoToPlace}
             className="block w-full h-full"
           >
-            <img
+            <SafeImage
               src={place.imageUrl}
               alt={place.name}
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-              loading="lazy"
             />
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
           </Link>

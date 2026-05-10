@@ -16,6 +16,7 @@ import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { PageHeaderSkeleton, PlaceGridSkeleton } from "@/components/ui/loading-states";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SafeImage } from "@/components/ui/safe-image";
 
 type DbCity = {
   id: string;
@@ -146,10 +147,11 @@ export function City() {
     <div className="w-full max-w-full overflow-x-hidden bg-background pb-24">
       <div className="relative h-[60vh] min-h-[400px]">
         <div className="absolute inset-0">
-          <img
+          <SafeImage
             src={city.image_url}
             alt={city.name}
             className="w-full h-full object-cover"
+            loading="eager"
           />
           <div className="absolute inset-0 bg-black/40" />
         </div>

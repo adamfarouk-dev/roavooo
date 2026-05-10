@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/lib/supabase";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
+import { SafeImage } from "@/components/ui/safe-image";
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -67,11 +68,12 @@ export function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-20 items-center">
           <Link href="/" className="flex items-center shrink-0">
-            <img
+            <SafeImage
               src="/ROAVOOO_WHITE.png"
               alt="Roavooo"
               className="h-20 md:h-24 w-auto object-contain"
               draggable={false}
+              loading="eager"
             />
           </Link>
 

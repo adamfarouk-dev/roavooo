@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { PageHeaderSkeleton, TripGridSkeleton } from "@/components/ui/loading-states";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SafeImage } from "@/components/ui/safe-image";
 
 type Trip = {
   id: string;
@@ -357,7 +358,7 @@ export function Trips() {
               >
                 <div className="relative h-56 bg-muted">
                   {coverImage ? (
-                    <img
+                    <SafeImage
                       src={coverImage}
                       alt={trip.title}
                       className="w-full h-full object-cover"

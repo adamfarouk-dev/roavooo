@@ -14,6 +14,7 @@ import { PlaceCard } from "@/components/ui/PlaceCard";
 import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/lib/supabase";
+import { SafeImage } from "@/components/ui/safe-image";
 
 type DbCity = {
   id: string;
@@ -259,10 +260,11 @@ const handleSearch = async (e: React.FormEvent) => {
     <div className="w-full">
       <section className="relative h-[88vh] min-h-[620px] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <img
+          <SafeImage
             src="https://images.unsplash.com/photo-1539020140153-e479b8c22e70?w=1920&q=80"
             alt="Morocco"
             className="w-full h-full object-cover"
+            loading="eager"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-background" />
         </div>
@@ -434,7 +436,7 @@ const handleSearch = async (e: React.FormEvent) => {
                   className="group relative aspect-[3/4] rounded-2xl overflow-hidden cursor-pointer"
                   onClick={() => setLocation(`/city/${city.slug}`)}
                 >
-                  <img
+                  <SafeImage
                     src={city.image_url}
                     alt={city.name}
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"

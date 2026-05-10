@@ -17,6 +17,7 @@ import { supabase } from "@/lib/supabase";
 import { SaveToTripModal } from "@/components/trips/SaveToTripModal";
 import { PlaceGridSkeleton } from "@/components/ui/loading-states";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SafeImage } from "@/components/ui/safe-image";
 
 type DbCity = {
   id: string;
@@ -228,10 +229,11 @@ export function Place() {
       <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-12 gap-12">
         <div className="lg:col-span-8 space-y-8">
           <div className="aspect-[16/9] md:aspect-[21/9] rounded-3xl overflow-hidden shadow-lg relative group">
-            <img
+            <SafeImage
               src={dbPlace.image_url}
               alt={dbPlace.name}
               className="w-full h-full object-cover"
+              loading="eager"
             />
             <div className="absolute top-4 left-4">
               <span className="px-4 py-2 bg-background/90 backdrop-blur-md text-xs font-semibold rounded-full uppercase tracking-wider text-primary shadow-sm">

@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SafeImage } from "@/components/ui/safe-image";
 
 type Trip = {
   id: string;
@@ -481,7 +482,7 @@ export function TripDetails() {
     return (
       <div key={item.id} className="rounded-2xl border border-border bg-card overflow-hidden">
         <Link href={`/place/${place.id}`}>
-          <img
+          <SafeImage
             src={place.image_url}
             alt={place.name}
             className="w-full h-52 object-cover cursor-pointer"
