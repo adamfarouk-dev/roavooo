@@ -19,6 +19,7 @@ import { PlaceGridSkeleton } from "@/components/ui/loading-states";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SafeImage } from "@/components/ui/safe-image";
 import { useDocumentTitle } from "@/hooks/use-document-title";
+import { useToast } from "@/hooks/use-toast";
 
 type DbCity = {
   id: string;
@@ -46,6 +47,7 @@ export function Place() {
   const { id } = useParams<{ id: string }>();
   const { isFavorite, toggleFavorite } = useFavorites();
   const { t, lang } = useLanguage();
+  const { toast } = useToast();
 
   const [cities, setCities] = useState<DbCity[]>([]);
   const [places, setPlaces] = useState<DbPlace[]>([]);
@@ -61,12 +63,22 @@ export function Place() {
 
       if (citiesRes.error) {
         console.error("Failed to fetch cities:", citiesRes.error);
+        toast({
+          variant: "destructive",
+          title: "Could not load cities",
+          description: citiesRes.error.message,
+        });
       } else {
         setCities((citiesRes.data ?? []) as DbCity[]);
       }
 
       if (placesRes.error) {
         console.error("Failed to fetch places:", placesRes.error);
+        toast({
+          variant: "destructive",
+          title: "Could not load place details",
+          description: placesRes.error.message,
+        });
       } else {
         setPlaces((placesRes.data ?? []) as DbPlace[]);
       }
@@ -75,7 +87,7 @@ export function Place() {
     };
 
     fetchData();
-  }, []);
+  }, [toast]);
 
   const dbPlace = useMemo(
     () => places.find((p) => p.id === id),

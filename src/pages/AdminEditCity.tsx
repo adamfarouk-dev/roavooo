@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useLocation, useParams } from "wouter";
+import { useToast } from "@/hooks/use-toast";
 
 export function AdminEditCity() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
 
   const [form, setForm] = useState({
@@ -44,7 +46,11 @@ export function AdminEditCity() {
         .single();
 
       if (error || !data) {
-        alert(error?.message || "City not found");
+        toast({
+          variant: "destructive",
+          title: "Could not load city",
+          description: error?.message || "City not found",
+        });
         setLocation("/admin");
         return;
       }
@@ -74,7 +80,7 @@ export function AdminEditCity() {
     };
 
     load();
-  }, [id, setLocation]);
+  }, [id, setLocation, toast]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -87,6 +93,19 @@ export function AdminEditCity() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const missingFields = Object.entries(form).filter(
+      ([key, value]) => key !== "id" && !value.trim()
+    );
+
+    if (missingFields.length > 0) {
+      toast({
+        variant: "destructive",
+        title: "Missing city details",
+        description: "Fill out all city fields before saving.",
+      });
+      return;
+    }
 
     const payload = {
       slug: form.slug,
@@ -111,10 +130,18 @@ export function AdminEditCity() {
     const { error } = await supabase.from("cities").update(payload).eq("id", id);
 
     if (error) {
-      alert(error.message);
+      toast({
+        variant: "destructive",
+        title: "Could not update city",
+        description: error.message,
+      });
       return;
     }
 
+    toast({
+      title: "City updated",
+      description: `${form.name} was saved successfully.`,
+    });
     setLocation("/admin");
   };
 
@@ -128,7 +155,7 @@ export function AdminEditCity() {
         <h1 className="text-4xl font-serif font-bold mb-2">Edit City</h1>
         <p className="text-muted-foreground mb-8">Update this city.</p>
 
-        <form onSubmit={handleSubmit} className="space-y-4 rounded-2xl border border-border bg-card p-6">
+        <form onSubmit={handleSubmit} noValidate className="space-y-4 rounded-2xl border border-border bg-card p-6">
           <input
             name="id"
             placeholder="ID"

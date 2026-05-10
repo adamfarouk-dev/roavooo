@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
 import { supabase } from '@/lib/supabase';
 import type { User } from '@supabase/supabase-js';
+import { toast } from '@/hooks/use-toast';
 
 export function useFavorites() {
   const [, setLocation] = useLocation();
@@ -23,6 +24,11 @@ export function useFavorites() {
 
     if (error) {
       console.error('Error loading favorites:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Could not load favorites',
+        description: 'Please refresh the page and try again.',
+      });
       setFavorites([]);
       setLoading(false);
       return;
@@ -83,10 +89,19 @@ export function useFavorites() {
 
       if (error) {
         console.error('Error removing favorite:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Could not remove favorite',
+          description: error.message,
+        });
         return;
       }
 
       setFavorites((prev) => prev.filter((id) => id !== placeId));
+      toast({
+        title: 'Removed from favorites',
+        description: 'This place was removed from your saved favorites.',
+      });
       return;
     }
 
@@ -97,10 +112,19 @@ export function useFavorites() {
 
     if (error) {
       console.error('Error adding favorite:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Could not save favorite',
+        description: error.message,
+      });
       return;
     }
 
     setFavorites((prev) => [...prev, placeId]);
+    toast({
+      title: 'Saved to favorites',
+      description: 'This place was added to your favorites.',
+    });
   };
 
   const isFavorite = (id: string) => favorites.includes(id);

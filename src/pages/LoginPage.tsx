@@ -2,6 +2,12 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Link, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { z } from "zod";
+
+const loginSchema = z.object({
+  identifier: z.string().trim().min(1, "Enter your username or email."),
+  password: z.string().min(6, "Password must be at least 6 characters."),
+});
 
 export function Login() {
   const [, setLocation] = useLocation();
@@ -9,14 +15,27 @@ export function Login() {
 
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
+  const [errors, setErrors] = useState<Partial<Record<"identifier" | "password", string>>>({});
 
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
 
     const cleanIdentifier = identifier.trim().toLowerCase();
+    const parsed = loginSchema.safeParse({ identifier: cleanIdentifier, password });
+
+    if (!parsed.success) {
+      const fieldErrors = parsed.error.flatten().fieldErrors;
+      setErrors({
+        identifier: fieldErrors.identifier?.[0],
+        password: fieldErrors.password?.[0],
+      });
+      return;
+    }
+
+    setErrors({});
+    setLoading(true);
 
     let loginEmail = cleanIdentifier;
 
@@ -86,6 +105,7 @@ export function Login() {
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <form
         onSubmit={handleLogin}
+        noValidate
         className="w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-xl space-y-4"
       >
         <h1 className="text-3xl font-serif font-bold text-foreground">
@@ -101,18 +121,28 @@ export function Login() {
           placeholder="Username or email"
           className="w-full p-3 rounded-lg bg-muted border border-border outline-none"
           value={identifier}
-          onChange={(e) => setIdentifier(e.target.value)}
-          required
+          onChange={(e) => {
+            setIdentifier(e.target.value);
+            setErrors((prev) => ({ ...prev, identifier: undefined }));
+          }}
         />
+        {errors.identifier && (
+          <p className="text-sm text-destructive">{errors.identifier}</p>
+        )}
 
         <input
           type="password"
           placeholder="Password"
           className="w-full p-3 rounded-lg bg-muted border border-border outline-none"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
+          onChange={(e) => {
+            setPassword(e.target.value);
+            setErrors((prev) => ({ ...prev, password: undefined }));
+          }}
         />
+        {errors.password && (
+          <p className="text-sm text-destructive">{errors.password}</p>
+        )}
 
         <button
           type="submit"

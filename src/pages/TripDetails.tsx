@@ -21,6 +21,17 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SafeImage } from "@/components/ui/safe-image";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 type Trip = {
   id: string;
@@ -165,6 +176,11 @@ export function TripDetails() {
 
     if (tripRes.error) {
       console.error("Failed to fetch trip:", tripRes.error);
+      toast({
+        variant: "destructive",
+        title: "Could not load trip",
+        description: tripRes.error.message,
+      });
       setTrip(null);
       setPlaces([]);
       setLoading(false);
@@ -177,6 +193,11 @@ export function TripDetails() {
 
     if (placesRes.error) {
       console.error("Failed to fetch trip places:", placesRes.error);
+      toast({
+        variant: "destructive",
+        title: "Could not load saved places",
+        description: placesRes.error.message,
+      });
       setPlaces([]);
       setNoteValues({});
       setSavedNoteValues({});
@@ -203,6 +224,11 @@ export function TripDetails() {
 
     if (citiesRes.error) {
       console.error("Failed to fetch cities:", citiesRes.error);
+      toast({
+        variant: "destructive",
+        title: "Could not load cities",
+        description: citiesRes.error.message,
+      });
       setCities([]);
     } else {
       setCities((citiesRes.data ?? []) as City[]);
@@ -330,9 +356,6 @@ export function TripDetails() {
 
   const handleDeleteTrip = async () => {
     if (!trip) return;
-
-    const confirmed = window.confirm(t.tripDetails.confirmDeleteTrip);
-    if (!confirmed) return;
 
     setDeletingTrip(true);
 
@@ -762,17 +785,41 @@ export function TripDetails() {
                 {t.tripDetails.editTrip}
               </Button>
 
-              <Button
-                variant="outline"
-                onClick={handleDeleteTrip}
-                disabled={deletingTrip}
-                className="border-red-500/40 text-red-500 hover:bg-red-500/10"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                {deletingTrip
-                  ? t.tripDetails.deletingTrip
-                  : t.tripDetails.deleteTrip}
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    disabled={deletingTrip}
+                    className="border-red-500/40 text-red-500 hover:bg-red-500/10"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    {deletingTrip
+                      ? t.tripDetails.deletingTrip
+                      : t.tripDetails.deleteTrip}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete trip?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will permanently delete this trip and remove all
+                      places saved inside it.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel disabled={deletingTrip}>
+                      Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDeleteTrip}
+                      disabled={deletingTrip}
+                      className="bg-red-600 text-white hover:bg-red-700"
+                    >
+                      Delete trip
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </div>
         ) : (

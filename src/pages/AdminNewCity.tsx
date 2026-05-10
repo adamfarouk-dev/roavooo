@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useLocation } from "wouter";
+import { useToast } from "@/hooks/use-toast";
 
 export function AdminNewCity() {
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
 
   const [form, setForm] = useState({
     id: "",
@@ -38,13 +40,34 @@ export function AdminNewCity() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const { error } = await supabase.from("cities").insert(form);
+    const missingFields = Object.entries(form).filter(
+      ([, value]) => !value.trim()
+    );
 
-    if (error) {
-      alert(error.message);
+    if (missingFields.length > 0) {
+      toast({
+        variant: "destructive",
+        title: "Missing city details",
+        description: "Fill out all city fields before saving.",
+      });
       return;
     }
 
+    const { error } = await supabase.from("cities").insert(form);
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Could not create city",
+        description: error.message,
+      });
+      return;
+    }
+
+    toast({
+      title: "City created",
+      description: `${form.name} was added successfully.`,
+    });
     setLocation("/admin");
   };
 
@@ -54,7 +77,7 @@ export function AdminNewCity() {
         <h1 className="text-4xl font-serif font-bold mb-2">New City</h1>
         <p className="text-muted-foreground mb-8">Add a new city to Roavooo.</p>
 
-        <form onSubmit={handleSubmit} className="space-y-4 rounded-2xl border border-border bg-card p-6">
+        <form onSubmit={handleSubmit} noValidate className="space-y-4 rounded-2xl border border-border bg-card p-6">
           <input
             name="id"
             placeholder="ID (example: c4)"

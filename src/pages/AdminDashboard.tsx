@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { useLocation } from "wouter";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDocumentTitle } from "@/hooks/use-document-title";
+import { useToast } from "@/hooks/use-toast";
 
 type DbPlace = {
   id: string;
@@ -51,6 +52,7 @@ type UserEvent = {
 
 export function AdminDashboard() {
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
   useDocumentTitle("Admin Dashboard - Roavooo");
 
   const [loading, setLoading] = useState(true);
@@ -77,6 +79,11 @@ export function AdminDashboard() {
 
     if (error) {
       console.error(error);
+      toast({
+        variant: "destructive",
+        title: "Could not load places",
+        description: error.message,
+      });
       return;
     }
 
@@ -91,6 +98,11 @@ export function AdminDashboard() {
 
     if (error) {
       console.error(error);
+      toast({
+        variant: "destructive",
+        title: "Could not load cities",
+        description: error.message,
+      });
       return;
     }
 
@@ -104,6 +116,11 @@ export function AdminDashboard() {
 
     if (error) {
       console.error("Failed to load analytics:", error);
+      toast({
+        variant: "destructive",
+        title: "Could not load analytics",
+        description: error.message,
+      });
       return;
     }
 
@@ -162,11 +179,19 @@ export function AdminDashboard() {
     const { error } = await supabase.from("places").delete().eq("id", id);
 
     if (error) {
-      alert(error.message);
+      toast({
+        variant: "destructive",
+        title: "Could not delete place",
+        description: error.message,
+      });
       return;
     }
 
     await loadPlaces();
+    toast({
+      title: "Place deleted",
+      description: "The place was removed successfully.",
+    });
   };
 
   const handleDeleteCity = async (id: string) => {
@@ -176,11 +201,19 @@ export function AdminDashboard() {
     const { error } = await supabase.from("cities").delete().eq("id", id);
 
     if (error) {
-      alert(error.message);
+      toast({
+        variant: "destructive",
+        title: "Could not delete city",
+        description: error.message,
+      });
       return;
     }
 
     await loadCities();
+    toast({
+      title: "City deleted",
+      description: "The city was removed successfully.",
+    });
   };
 
   const handleLogout = async () => {

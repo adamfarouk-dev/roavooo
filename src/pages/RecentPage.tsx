@@ -4,6 +4,7 @@ import { History, ArrowLeft } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { PlaceCard } from "@/components/ui/PlaceCard";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useToast } from "@/hooks/use-toast";
 
 type DbPlace = {
   id: string;
@@ -28,6 +29,7 @@ type RecentViewRow = {
 
 export function Recent() {
   const { t, lang } = useLanguage();
+  const { toast } = useToast();
 
   const [loading, setLoading] = useState(true);
   const [recentPlaces, setRecentPlaces] = useState<DbPlace[]>([]);
@@ -41,6 +43,11 @@ export function Recent() {
 
       if (userError) {
         console.error("Failed to get user:", userError);
+        toast({
+          variant: "destructive",
+          title: "Could not check your session",
+          description: userError.message,
+        });
         setRecentPlaces([]);
         setIsLoggedIn(false);
         setLoading(false);
@@ -85,6 +92,11 @@ export function Recent() {
 
       if (error) {
         console.error("Failed to fetch recently viewed places:", error);
+        toast({
+          variant: "destructive",
+          title: "Could not load recently viewed places",
+          description: error.message,
+        });
         setRecentPlaces([]);
         setLoading(false);
         return;
@@ -101,7 +113,7 @@ export function Recent() {
     };
 
     fetchRecentPlaces();
-  }, []);
+  }, [toast]);
 
   const mappedRecentPlaces = useMemo(() => {
     return recentPlaces.map((place) => ({

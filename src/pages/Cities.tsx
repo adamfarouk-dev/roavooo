@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SafeImage } from "@/components/ui/safe-image";
+import { useToast } from "@/hooks/use-toast";
 
 type DbCity = {
   id: string;
@@ -21,6 +22,7 @@ type DbCity = {
 
 export function Cities() {
   const { lang, t } = useLanguage();
+  const { toast } = useToast();
 
   const [cities, setCities] = useState<DbCity[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,6 +39,11 @@ export function Cities() {
 
       if (error) {
         console.error("Failed to fetch cities:", error);
+        toast({
+          variant: "destructive",
+          title: "Could not load cities",
+          description: "Please refresh the page and try again.",
+        });
         setCities([]);
       } else {
         setCities((data ?? []) as DbCity[]);
@@ -46,7 +53,7 @@ export function Cities() {
     };
 
     fetchCities();
-  }, []);
+  }, [toast]);
 
   const filteredCities = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();

@@ -95,6 +95,11 @@ export function Trips() {
 
     if (userError) {
       console.error("Error fetching user:", userError);
+      toast({
+        variant: "destructive",
+        title: "Could not check your session",
+        description: userError.message,
+      });
       setIsLoggedIn(false);
       setAuthChecked(true);
       setLoading(false);
@@ -135,6 +140,11 @@ export function Trips() {
 
     if (tripsRes.error) {
       console.error("Error fetching trips:", tripsRes.error);
+      toast({
+        variant: "destructive",
+        title: "Could not load trips",
+        description: tripsRes.error.message,
+      });
       setTrips([]);
     } else {
       setTrips((tripsRes.data ?? []) as Trip[]);
@@ -142,6 +152,11 @@ export function Trips() {
 
     if (citiesRes.error) {
       console.error("Error fetching cities:", citiesRes.error);
+      toast({
+        variant: "destructive",
+        title: "Could not load cities",
+        description: citiesRes.error.message,
+      });
       setCities([]);
     } else {
       setCities((citiesRes.data ?? []) as City[]);
@@ -149,6 +164,11 @@ export function Trips() {
 
     if (tripPlacesRes.error) {
       console.error("Error fetching trip places:", tripPlacesRes.error);
+      toast({
+        variant: "destructive",
+        title: "Could not load trip places",
+        description: tripPlacesRes.error.message,
+      });
       setTripPlaceCounts({});
       setTripCoverImages({});
     } else {

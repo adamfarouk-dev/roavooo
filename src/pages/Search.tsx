@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 
 type DbCity = {
   id: string;
@@ -39,6 +40,7 @@ type DbPlace = {
 export function Search() {
   const [location, setLocation] = useLocation();
   const { t, lang } = useLanguage();
+  const { toast } = useToast();
 
   const [cities, setCities] = useState<DbCity[]>([]);
   const [places, setPlaces] = useState<DbPlace[]>([]);
@@ -67,6 +69,11 @@ export function Search() {
 
       if (citiesRes.error) {
         console.error("Failed to fetch cities:", citiesRes.error);
+        toast({
+          variant: "destructive",
+          title: "Could not load cities",
+          description: citiesRes.error.message,
+        });
         setCities([]);
       } else {
         setCities((citiesRes.data as DbCity[]) || []);
@@ -74,6 +81,11 @@ export function Search() {
 
       if (placesRes.error) {
         console.error("Failed to fetch places:", placesRes.error);
+        toast({
+          variant: "destructive",
+          title: "Could not load places",
+          description: placesRes.error.message,
+        });
         setPlaces([]);
       } else {
         setPlaces((placesRes.data as DbPlace[]) || []);
@@ -83,7 +95,7 @@ export function Search() {
     };
 
     fetchSearchData();
-  }, []);
+  }, [toast]);
 
   const updateUrlParams = (
     nextQuery: string,

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useLocation } from "wouter";
+import { useToast } from "@/hooks/use-toast";
 
 type DbCity = {
   id: string;
@@ -9,6 +10,7 @@ type DbCity = {
 
 export function AdminNewPlace() {
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
 
   const [cities, setCities] = useState<DbCity[]>([]);
   const [form, setForm] = useState({
@@ -28,12 +30,20 @@ export function AdminNewPlace() {
 
   useEffect(() => {
     const load = async () => {
-      const { data } = await supabase.from("cities").select("id,name").order("id", { ascending: true });
+      const { data, error } = await supabase.from("cities").select("id,name").order("id", { ascending: true });
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Could not load cities",
+          description: error.message,
+        });
+        return;
+      }
       setCities((data as DbCity[]) || []);
     };
 
     load();
-  }, []);
+  }, [toast]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -46,6 +56,34 @@ export function AdminNewPlace() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const requiredFields = [
+      form.id,
+      form.city_id,
+      form.name,
+      form.description_en,
+      form.description_fr,
+      form.image_url,
+      form.rating,
+    ];
+
+    if (requiredFields.some((value) => !value.trim())) {
+      toast({
+        variant: "destructive",
+        title: "Missing place details",
+        description: "Fill out the required place fields before saving.",
+      });
+      return;
+    }
+
+    if (Number.isNaN(Number(form.rating))) {
+      toast({
+        variant: "destructive",
+        title: "Invalid rating",
+        description: "Enter a numeric rating.",
+      });
+      return;
+    }
 
     const payload = {
       id: form.id,
@@ -65,10 +103,18 @@ export function AdminNewPlace() {
     const { error } = await supabase.from("places").insert(payload);
 
     if (error) {
-      alert(error.message);
+      toast({
+        variant: "destructive",
+        title: "Could not create place",
+        description: error.message,
+      });
       return;
     }
 
+    toast({
+      title: "Place created",
+      description: `${form.name} was added successfully.`,
+    });
     setLocation("/admin");
   };
 
@@ -78,7 +124,7 @@ export function AdminNewPlace() {
         <h1 className="text-4xl font-serif font-bold mb-2">New Place</h1>
         <p className="text-muted-foreground mb-8">Add a new stay, activity, or restaurant.</p>
 
-        <form onSubmit={handleSubmit} className="space-y-4 rounded-2xl border border-border bg-card p-6">
+        <form onSubmit={handleSubmit} noValidate className="space-y-4 rounded-2xl border border-border bg-card p-6">
           <input
             name="id"
             placeholder="ID (example: s9)"

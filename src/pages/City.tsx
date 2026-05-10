@@ -18,6 +18,7 @@ import { PageHeaderSkeleton, PlaceGridSkeleton } from "@/components/ui/loading-s
 import { Skeleton } from "@/components/ui/skeleton";
 import { SafeImage } from "@/components/ui/safe-image";
 import { useDocumentTitle } from "@/hooks/use-document-title";
+import { useToast } from "@/hooks/use-toast";
 
 type DbCity = {
   id: string;
@@ -58,6 +59,7 @@ type DbPlace = {
 export function City() {
   const { slug } = useParams<{ slug: string }>();
   const { t, lang } = useLanguage();
+  const { toast } = useToast();
 
   const [cities, setCities] = useState<DbCity[]>([]);
   const [places, setPlaces] = useState<DbPlace[]>([]);
@@ -70,19 +72,29 @@ export function City() {
     ]).then(([citiesRes, placesRes]) => {
       if (citiesRes.error) {
         console.error("Failed to fetch cities:", citiesRes.error);
+        toast({
+          variant: "destructive",
+          title: "Could not load city details",
+          description: citiesRes.error.message,
+        });
       } else {
         setCities((citiesRes.data as DbCity[]) || []);
       }
 
       if (placesRes.error) {
         console.error("Failed to fetch places:", placesRes.error);
+        toast({
+          variant: "destructive",
+          title: "Could not load places",
+          description: placesRes.error.message,
+        });
       } else {
         setPlaces((placesRes.data as DbPlace[]) || []);
       }
 
       setLoading(false);
     });
-  }, []);
+  }, [toast]);
 
   const city = cities.find((c) => c.slug === slug);
   useDocumentTitle(city ? `${city.name} Travel Guide - Roavooo` : undefined);

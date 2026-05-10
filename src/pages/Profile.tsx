@@ -59,6 +59,11 @@ export function Profile() {
 
       if (userError) {
         console.error("Failed to fetch user:", userError);
+        toast({
+          variant: "destructive",
+          title: "Could not load your profile",
+          description: userError.message,
+        });
         setLoading(false);
         return;
       }
@@ -81,6 +86,11 @@ export function Profile() {
 
       if (profileRes.error) {
         console.error("Failed to fetch profile:", profileRes.error);
+        toast({
+          variant: "destructive",
+          title: "Could not load profile details",
+          description: profileRes.error.message,
+        });
       } else {
         const profileData = profileRes.data as ProfileRow;
         setProfile(profileData);
@@ -91,10 +101,20 @@ export function Profile() {
 
       if (tripsRes.error) {
         console.error("Failed to fetch trips count:", tripsRes.error);
+        toast({
+          variant: "destructive",
+          title: "Could not load trips count",
+          description: tripsRes.error.message,
+        });
       }
 
       if (favoritesRes.error) {
         console.error("Failed to fetch favorites count:", favoritesRes.error);
+        toast({
+          variant: "destructive",
+          title: "Could not load favorites count",
+          description: favoritesRes.error.message,
+        });
       }
 
       setStats({
@@ -106,7 +126,7 @@ export function Profile() {
     };
 
     fetchProfileData();
-  }, []);
+  }, [toast]);
 
   const handleSaveUsername = async () => {
     const cleanUsername = username.trim();
@@ -116,6 +136,24 @@ export function Profile() {
         variant: "destructive",
         title: t.profile.toasts.usernameRequiredTitle,
         description: t.profile.toasts.usernameRequiredDescription,
+      });
+      return;
+    }
+
+    if (cleanUsername.length < 3 || cleanUsername.length > 24) {
+      toast({
+        variant: "destructive",
+        title: "Invalid username",
+        description: "Username must be between 3 and 24 characters.",
+      });
+      return;
+    }
+
+    if (!/^[a-z0-9_]+$/.test(cleanUsername.toLowerCase())) {
+      toast({
+        variant: "destructive",
+        title: "Invalid username",
+        description: "Use only letters, numbers, and underscores.",
       });
       return;
     }

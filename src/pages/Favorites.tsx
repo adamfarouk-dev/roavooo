@@ -8,6 +8,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/lib/supabase";
 import { PageHeaderSkeleton, PlaceGridSkeleton } from "@/components/ui/loading-states";
 import { useDocumentTitle } from "@/hooks/use-document-title";
+import { useToast } from "@/hooks/use-toast";
 
 type DbPlace = {
   id: string;
@@ -27,6 +28,7 @@ type DbPlace = {
 export function Favorites() {
   const { favorites, user, loading: favoritesLoading } = useFavorites();
   const { t, lang } = useLanguage();
+  const { toast } = useToast();
   useDocumentTitle("My Favorites - Roavooo");
 
   const [places, setPlaces] = useState<DbPlace[]>([]);
@@ -51,6 +53,11 @@ export function Favorites() {
 
       if (error) {
         console.error("Failed to fetch favorite places:", error);
+        toast({
+          variant: "destructive",
+          title: "Could not load favorite places",
+          description: error.message,
+        });
         setPlaces([]);
         setLoadingPlaces(false);
         return;
@@ -61,7 +68,7 @@ export function Favorites() {
     };
 
     loadPlaces();
-  }, [favorites, user, favoritesLoading]);
+  }, [favorites, user, favoritesLoading, toast]);
 
   const mappedPlaces = useMemo(() => {
     return places.map((place) => ({

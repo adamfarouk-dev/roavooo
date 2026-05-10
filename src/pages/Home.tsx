@@ -16,6 +16,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/lib/supabase";
 import { SafeImage } from "@/components/ui/safe-image";
 import { useDocumentTitle } from "@/hooks/use-document-title";
+import { useToast } from "@/hooks/use-toast";
 
 type DbCity = {
   id: string;
@@ -62,6 +63,7 @@ type RecentViewRow = {
 export function Home() {
   const [, setLocation] = useLocation();
   const { t, lang } = useLanguage();
+  const { toast } = useToast();
   useDocumentTitle("Roavooo - Discover Morocco");
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -91,6 +93,11 @@ export function Home() {
 
       if (citiesRes.error) {
         console.error("Failed to fetch cities:", citiesRes.error);
+        toast({
+          variant: "destructive",
+          title: "Could not load cities",
+          description: citiesRes.error.message,
+        });
         setCities([]);
       } else {
         setCities((citiesRes.data ?? []) as DbCity[]);
@@ -98,6 +105,11 @@ export function Home() {
 
       if (placesRes.error) {
         console.error("Failed to fetch places:", placesRes.error);
+        toast({
+          variant: "destructive",
+          title: "Could not load places",
+          description: placesRes.error.message,
+        });
         setPlaces([]);
       } else {
         setPlaces((placesRes.data ?? []) as DbPlace[]);
@@ -107,7 +119,7 @@ export function Home() {
     };
 
     fetchHomeData();
-  }, []);
+  }, [toast]);
 
   useEffect(() => {
     const fetchRecentlyViewed = async () => {
@@ -144,6 +156,11 @@ export function Home() {
 
       if (error) {
         console.error("Failed to fetch recently viewed places:", error);
+        toast({
+          variant: "destructive",
+          title: "Could not load recently viewed places",
+          description: error.message,
+        });
         setRecentPlaces([]);
         return;
       }
@@ -158,7 +175,7 @@ export function Home() {
     };
 
     fetchRecentlyViewed();
-  }, [userId]);
+  }, [toast, userId]);
 
   const CATEGORIES = [
     { label: t.hero.tabs.stays, value: "stay" as const, icon: Bed },

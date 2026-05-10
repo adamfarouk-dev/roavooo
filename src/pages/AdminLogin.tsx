@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useLocation } from "wouter";
+import { useToast } from "@/hooks/use-toast";
 
 export function AdminLogin() {
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -11,6 +13,25 @@ export function AdminLogin() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!email.trim() || !password) {
+      toast({
+        variant: "destructive",
+        title: "Missing login details",
+        description: "Enter your email and password.",
+      });
+      return;
+    }
+
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
+      toast({
+        variant: "destructive",
+        title: "Invalid email",
+        description: "Enter a valid email address.",
+      });
+      return;
+    }
+
     setLoading(true);
 
     const { error } = await supabase.auth.signInWithPassword({
@@ -21,11 +42,18 @@ export function AdminLogin() {
     setLoading(false);
 
     if (error) {
-      alert(error.message);
+      toast({
+        variant: "destructive",
+        title: "Admin login failed",
+        description: error.message,
+      });
       return;
     }
 
-    // success → go to admin
+    toast({
+      title: "Welcome back",
+      description: "You are logged in to the admin dashboard.",
+    });
     setLocation("/admin");
   };
 
@@ -33,6 +61,7 @@ export function AdminLogin() {
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <form
         onSubmit={handleLogin}
+        noValidate
         className="w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-xl space-y-4"
       >
         <h1 className="text-3xl font-serif font-bold text-foreground">

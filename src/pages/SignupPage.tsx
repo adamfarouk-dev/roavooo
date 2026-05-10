@@ -2,6 +2,18 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Link, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { z } from "zod";
+
+const signupSchema = z.object({
+  username: z
+    .string()
+    .trim()
+    .min(3, "Username must be at least 3 characters.")
+    .max(24, "Username must be 24 characters or less.")
+    .regex(/^[a-z0-9_]+$/, "Use only letters, numbers, and underscores."),
+  email: z.string().trim().min(1, "Enter your email.").email("Enter a valid email address."),
+  password: z.string().min(6, "Password must be at least 6 characters."),
+});
 
 export function Signup() {
   const [, setLocation] = useLocation();
@@ -10,45 +22,35 @@ export function Signup() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errors, setErrors] = useState<
+    Partial<Record<"username" | "email" | "password", string>>
+  >({});
 
   const [loading, setLoading] = useState(false);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
 
     const cleanUsername = username.trim().toLowerCase();
     const cleanEmail = email.trim().toLowerCase();
+    const parsed = signupSchema.safeParse({
+      username: cleanUsername,
+      email: cleanEmail,
+      password,
+    });
 
-    if (cleanUsername.length < 3) {
-      toast({
-        variant: "destructive",
-        title: "Invalid username",
-        description: "Username must be at least 3 characters.",
+    if (!parsed.success) {
+      const fieldErrors = parsed.error.flatten().fieldErrors;
+      setErrors({
+        username: fieldErrors.username?.[0],
+        email: fieldErrors.email?.[0],
+        password: fieldErrors.password?.[0],
       });
-      setLoading(false);
       return;
     }
 
-    if (!/^[a-z0-9_]+$/.test(cleanUsername)) {
-      toast({
-        variant: "destructive",
-        title: "Invalid username",
-        description: "Use only letters, numbers, and underscores.",
-      });
-      setLoading(false);
-      return;
-    }
-
-    if (password.length < 6) {
-      toast({
-        variant: "destructive",
-        title: "Password too short",
-        description: "Password must be at least 6 characters.",
-      });
-      setLoading(false);
-      return;
-    }
+    setErrors({});
+    setLoading(true);
 
     const { data: existingEmail, error: usernameCheckError } =
       await supabase.rpc("get_email_by_username", {
@@ -144,6 +146,7 @@ export function Signup() {
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <form
         onSubmit={handleSignup}
+        noValidate
         className="w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-xl space-y-4"
       >
         <h1 className="text-3xl font-serif font-bold text-foreground">
@@ -159,27 +162,43 @@ export function Signup() {
           placeholder="Username"
           className="w-full p-3 rounded-lg bg-muted border border-border outline-none"
           value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          required
+          onChange={(e) => {
+            setUsername(e.target.value);
+            setErrors((prev) => ({ ...prev, username: undefined }));
+          }}
         />
+        {errors.username && (
+          <p className="text-sm text-destructive">{errors.username}</p>
+        )}
 
         <input
-          type="email"
+          type="text"
+          inputMode="email"
           placeholder="Email"
           className="w-full p-3 rounded-lg bg-muted border border-border outline-none"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
+          onChange={(e) => {
+            setEmail(e.target.value);
+            setErrors((prev) => ({ ...prev, email: undefined }));
+          }}
         />
+        {errors.email && (
+          <p className="text-sm text-destructive">{errors.email}</p>
+        )}
 
         <input
           type="password"
           placeholder="Password"
           className="w-full p-3 rounded-lg bg-muted border border-border outline-none"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
+          onChange={(e) => {
+            setPassword(e.target.value);
+            setErrors((prev) => ({ ...prev, password: undefined }));
+          }}
         />
+        {errors.password && (
+          <p className="text-sm text-destructive">{errors.password}</p>
+        )}
 
         <button
           type="submit"
