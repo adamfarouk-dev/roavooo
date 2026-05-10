@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useLocation, useParams } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { AdminImageUpload } from "@/components/admin/AdminImageUpload";
 
 type DbCity = {
   id: string;
@@ -12,6 +13,7 @@ export function AdminEditPlace() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const [imageUploading, setImageUploading] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [cities, setCities] = useState<DbCity[]>([]);
@@ -103,6 +105,15 @@ export function AdminEditPlace() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (imageUploading) {
+      toast({
+        variant: "destructive",
+        title: "Image is still uploading",
+        description: "Wait for the upload to finish before saving.",
+      });
+      return;
+    }
 
     const requiredFields = [
       form.city_id,
@@ -235,13 +246,15 @@ export function AdminEditPlace() {
             required
           />
 
-          <input
-            name="image_url"
-            placeholder="Image URL"
+          <AdminImageUpload
             value={form.image_url}
-            onChange={handleChange}
-            className="w-full p-3 rounded-lg bg-muted"
-            required
+            onChange={(imageUrl) =>
+              setForm((prev) => ({ ...prev, image_url: imageUrl }))
+            }
+            folder="places"
+            label="Place image"
+            placeholder="Image URL (optional fallback)"
+            onUploadingChange={setImageUploading}
           />
 
           <input
@@ -288,9 +301,10 @@ export function AdminEditPlace() {
           <div className="flex gap-3">
             <button
               type="submit"
+              disabled={imageUploading}
               className="bg-primary text-white px-5 py-3 rounded-lg font-semibold"
             >
-              Save Changes
+              {imageUploading ? "Uploading..." : "Save Changes"}
             </button>
 
             <button

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { AdminImageUpload } from "@/components/admin/AdminImageUpload";
 
 type DbCity = {
   id: string;
@@ -11,6 +12,7 @@ type DbCity = {
 export function AdminNewPlace() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const [imageUploading, setImageUploading] = useState(false);
 
   const [cities, setCities] = useState<DbCity[]>([]);
   const [form, setForm] = useState({
@@ -56,6 +58,15 @@ export function AdminNewPlace() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (imageUploading) {
+      toast({
+        variant: "destructive",
+        title: "Image is still uploading",
+        description: "Wait for the upload to finish before saving.",
+      });
+      return;
+    }
 
     const requiredFields = [
       form.id,
@@ -187,13 +198,15 @@ export function AdminNewPlace() {
             required
           />
 
-          <input
-            name="image_url"
-            placeholder="Image URL"
+          <AdminImageUpload
             value={form.image_url}
-            onChange={handleChange}
-            className="w-full p-3 rounded-lg bg-muted"
-            required
+            onChange={(imageUrl) =>
+              setForm((prev) => ({ ...prev, image_url: imageUrl }))
+            }
+            folder="places"
+            label="Place image"
+            placeholder="Image URL (optional fallback)"
+            onUploadingChange={setImageUploading}
           />
 
           <input
@@ -240,9 +253,10 @@ export function AdminNewPlace() {
           <div className="flex gap-3">
             <button
               type="submit"
+              disabled={imageUploading}
               className="bg-primary text-white px-5 py-3 rounded-lg font-semibold"
             >
-              Save Place
+              {imageUploading ? "Uploading..." : "Save Place"}
             </button>
 
             <button

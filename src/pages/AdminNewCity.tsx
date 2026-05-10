@@ -2,10 +2,12 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { AdminImageUpload } from "@/components/admin/AdminImageUpload";
 
 export function AdminNewCity() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const [imageUploading, setImageUploading] = useState(false);
 
   const [form, setForm] = useState({
     id: "",
@@ -39,6 +41,15 @@ export function AdminNewCity() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (imageUploading) {
+      toast({
+        variant: "destructive",
+        title: "Image is still uploading",
+        description: "Wait for the upload to finish before saving.",
+      });
+      return;
+    }
 
     const missingFields = Object.entries(form).filter(
       ([, value]) => !value.trim()
@@ -105,13 +116,15 @@ export function AdminNewCity() {
             required
           />
 
-          <input
-            name="image_url"
-            placeholder="Hero image URL"
+          <AdminImageUpload
             value={form.image_url}
-            onChange={handleChange}
-            className="w-full p-3 rounded-lg bg-muted"
-            required
+            onChange={(imageUrl) =>
+              setForm((prev) => ({ ...prev, image_url: imageUrl }))
+            }
+            folder="cities"
+            label="Hero image"
+            placeholder="Hero image URL (optional fallback)"
+            onUploadingChange={setImageUploading}
           />
 
           <input
@@ -243,9 +256,10 @@ export function AdminNewCity() {
           <div className="flex gap-3">
             <button
               type="submit"
+              disabled={imageUploading}
               className="bg-primary text-white px-5 py-3 rounded-lg font-semibold"
             >
-              Save City
+              {imageUploading ? "Uploading..." : "Save City"}
             </button>
 
             <button
