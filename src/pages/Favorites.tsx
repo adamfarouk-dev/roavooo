@@ -88,7 +88,7 @@ export function Favorites() {
 
   if (favoritesLoading) {
     return (
-      <div className="min-h-[70vh] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <div className="min-h-[70vh] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16">
         <PageHeaderSkeleton />
         <PlaceGridSkeleton />
       </div>
@@ -97,7 +97,7 @@ export function Favorites() {
 
   if (!user) {
     return (
-      <div className="min-h-[70vh] max-w-4xl mx-auto px-4 py-16 flex items-center justify-center">
+      <div className="min-h-[70vh] max-w-4xl mx-auto px-4 py-10 md:py-16 flex items-center justify-center">
         <div className="w-full rounded-3xl border border-border bg-card p-8 md:p-10 text-center shadow-sm">
           <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-5">
             <Lock className="w-8 h-8 text-primary" />
@@ -111,13 +111,13 @@ export function Favorites() {
             {t.profile.subtitle}
           </p>
 
-          <div className="flex justify-center gap-3">
+          <div className="flex flex-col sm:flex-row justify-center gap-3">
             <Link href="/login">
-              <Button className="rounded-xl px-5 py-3">{t.profile.logIn}</Button>
+              <Button className="w-full sm:w-auto rounded-xl px-5 py-3">{t.profile.logIn}</Button>
             </Link>
 
             <Link href="/signup">
-              <Button variant="outline" className="rounded-xl px-5 py-3">
+              <Button variant="outline" className="w-full sm:w-auto rounded-xl px-5 py-3">
                 {t.profile.signUp}
               </Button>
             </Link>
@@ -129,12 +129,12 @@ export function Favorites() {
 
   if (loadingPlaces) {
     return (
-      <div className="min-h-[70vh] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="mb-12">
-          <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4">
+      <div className="min-h-[70vh] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16">
+        <div className="mb-8 md:mb-12">
+          <h1 className="text-3xl md:text-5xl font-serif font-bold text-foreground mb-3 md:mb-4">
             {t.favorites.title}
           </h1>
-          <p className="text-xl text-muted-foreground">
+          <p className="text-base md:text-xl text-muted-foreground">
             {t.favorites.subtitle}
           </p>
         </div>
@@ -145,16 +145,16 @@ export function Favorites() {
   }
 
   return (
-    <div className="min-h-[70vh] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-      <div className="mb-12">
-        <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4">
+    <div className="min-h-[70vh] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16">
+      <div className="mb-8 md:mb-12">
+        <h1 className="text-3xl md:text-5xl font-serif font-bold text-foreground mb-3 md:mb-4">
           {t.favorites.title}
         </h1>
-        <p className="text-xl text-muted-foreground">{t.favorites.subtitle}</p>
+        <p className="text-base md:text-xl text-muted-foreground">{t.favorites.subtitle}</p>
       </div>
 
       {mappedPlaces.length === 0 ? (
-        <div className="rounded-3xl border border-border bg-card p-8 md:p-10 text-center shadow-sm">
+        <div className="rounded-3xl border border-border bg-card p-6 md:p-10 text-center shadow-sm">
           <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-5">
             <Heart className="w-8 h-8 text-primary" />
           </div>
@@ -168,13 +168,13 @@ export function Favorites() {
           </p>
 
           <Link href="/search">
-            <Button className="rounded-xl px-5 py-3">
+            <Button className="w-full sm:w-auto rounded-xl px-5 py-3">
               {t.favorites.emptyCta}
             </Button>
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-8">
           {mappedPlaces.map((place) => (
             <PlaceCard key={place.id} place={place} showSaveToTrip />
           ))}

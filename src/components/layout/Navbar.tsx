@@ -1,6 +1,16 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Menu, X, LogOut, User, Briefcase } from "lucide-react";
+import {
+  Menu,
+  X,
+  LogOut,
+  User,
+  Briefcase,
+  Home as HomeIcon,
+  Map,
+  Search,
+  Heart,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/lib/supabase";
@@ -32,6 +42,10 @@ export function Navbar() {
     };
   }, []);
 
+  useEffect(() => {
+    setIsOpen(false);
+  }, [location]);
+
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
 
@@ -46,11 +60,11 @@ export function Navbar() {
   };
 
   const navLinks = [
-    { name: t.nav.home, path: "/" },
-    { name: t.nav.cities, path: "/cities" },
-    { name: t.nav.trips, path: "/trips" },
-    { name: t.nav.favorites, path: "/favorites" },
-    { name: t.nav.search, path: "/search" },
+    { name: t.nav.home, path: "/", icon: HomeIcon },
+    { name: t.nav.cities, path: "/cities", icon: Map },
+    { name: t.nav.trips, path: "/trips", icon: Briefcase },
+    { name: t.nav.favorites, path: "/favorites", icon: Heart },
+    { name: t.nav.search, path: "/search", icon: Search },
   ];
 
   const isLinkActive = (path: string) => {
@@ -64,20 +78,20 @@ export function Navbar() {
     user?.user_metadata?.username || user?.email || t.nav.account;
 
   return (
-    <nav className="sticky top-0 z-50 w-full bg-background/90 backdrop-blur-md border-b border-border">
+    <nav className="sticky top-0 z-50 w-full border-b border-white/10 bg-black/75 shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-xl lg:border-border lg:bg-background/90 lg:shadow-none lg:backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-20 items-center">
+        <div className="flex justify-between h-24 lg:h-20 items-center">
           <Link href="/" className="flex items-center shrink-0">
             <SafeImage
               src="/ROAVOOO_WHITE.png"
               alt="Roavooo"
-              className="h-20 md:h-24 w-auto object-contain"
+              className="h-20 w-auto max-w-[15rem] object-contain sm:h-24 sm:max-w-[18rem] lg:h-24 lg:max-w-none"
               draggable={false}
               loading="eager"
             />
           </Link>
 
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden lg:flex items-center space-x-8">
             {navLinks.map((link) => (
               <Link
                 key={link.path}
@@ -161,37 +175,13 @@ export function Navbar() {
           
           </div>
 
-          <div className="md:hidden flex items-center gap-3">
-            <div className="flex items-center rounded-full border border-border overflow-hidden text-xs font-semibold">
-              <button
-                type="button"
-                onClick={() => setLang("en")}
-                className={`px-2.5 py-1 transition-colors ${
-                  lang === "en"
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground"
-                }`}
-              >
-                EN
-              </button>
-              <button
-                type="button"
-                onClick={() => setLang("fr")}
-                className={`px-2.5 py-1 transition-colors ${
-                  lang === "fr"
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground"
-                }`}
-              >
-                FR
-              </button>
-            </div>
-
+          <div className="lg:hidden flex items-center">
             <button
               type="button"
               onClick={() => setIsOpen((prev) => !prev)}
-              className="text-foreground hover:text-primary focus:outline-none p-2"
+              className="min-h-11 min-w-11 inline-flex items-center justify-center rounded-full border border-white/15 bg-white/10 text-white hover:text-primary hover:border-primary/50 focus:outline-none transition-colors"
               aria-label="Toggle menu"
+              aria-expanded={isOpen}
             >
               {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
@@ -202,36 +192,39 @@ export function Navbar() {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden border-t border-border bg-background"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.18 }}
+            className="lg:hidden border-t border-white/10 bg-black/90 shadow-2xl backdrop-blur-xl"
           >
-            <div className="px-4 pt-2 pb-6 space-y-1">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 max-h-[calc(100dvh-4rem)] overflow-y-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {navLinks.map((link) => (
                 <Link
                   key={link.path}
                   href={link.path}
                   onClick={() => setIsOpen(false)}
-                  className={`block px-3 py-4 text-base font-medium rounded-md ${
+                  className={`block px-4 py-3.5 text-base font-medium rounded-xl transition-colors ${
                     isLinkActive(link.path)
-                      ? "text-primary bg-primary/5"
-                      : "text-foreground/80 hover:text-primary hover:bg-muted"
+                      ? "text-primary bg-primary/10"
+                      : "text-white/85 hover:text-primary hover:bg-white/10"
                   }`}
                 >
                   <span className="inline-flex items-center gap-2">
-                    {link.path === "/trips" && <Briefcase className="w-4 h-4" />}
+                    <link.icon className="w-4 h-4" />
                     {link.name}
                   </span>
                 </Link>
               ))}
+              </div>
 
               {!user ? (
-                <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-4 pt-4 border-t border-white/10">
                   <Link
                     href="/login"
                     onClick={() => setIsOpen(false)}
-                    className="block px-3 py-4 text-base font-medium rounded-md text-foreground/80 hover:text-primary hover:bg-muted"
+                    className="block px-4 py-3.5 text-base font-medium rounded-xl text-white/85 hover:text-primary hover:bg-white/10 transition-colors"
                   >
                     {t.nav.login}
                   </Link>
@@ -239,20 +232,20 @@ export function Navbar() {
                   <Link
                     href="/signup"
                     onClick={() => setIsOpen(false)}
-                    className="block px-3 py-4 text-base font-medium rounded-md text-foreground/80 hover:text-primary hover:bg-muted"
+                    className="block px-4 py-3.5 text-base font-semibold rounded-xl bg-primary text-primary-foreground hover:opacity-90 active:scale-[0.98] transition-all"
                   >
                     {t.nav.signup}
                   </Link>
-                </>
+                </div>
               ) : (
-                <>
+                <div className="space-y-2 mt-4 pt-4 border-t border-white/10">
                   <Link
                     href="/profile"
                     onClick={() => setIsOpen(false)}
-                    className={`block px-3 py-4 text-base font-medium rounded-md ${
+                    className={`block px-4 py-3.5 text-base font-medium rounded-xl transition-colors ${
                       isLinkActive("/profile")
-                        ? "text-primary bg-primary/5"
-                        : "text-foreground/80 hover:text-primary hover:bg-muted"
+                        ? "text-primary bg-primary/10"
+                        : "text-white/85 hover:text-primary hover:bg-white/10"
                     }`}
                   >
                     <span className="inline-flex items-center gap-2 max-w-full">
@@ -264,12 +257,47 @@ export function Navbar() {
                   <button
                     type="button"
                     onClick={handleLogout}
-                    className="w-full text-left px-3 py-4 text-base font-medium rounded-md text-foreground/80 hover:text-primary hover:bg-muted"
+                    className="w-full text-left px-4 py-3.5 text-base font-medium rounded-xl text-white/85 hover:text-primary hover:bg-white/10 transition-colors"
                   >
-                    {t.nav.logout}
+                    <span className="inline-flex items-center gap-2">
+                      <LogOut className="w-4 h-4" />
+                      {t.nav.logout}
+                    </span>
                   </button>
-                </>
+                </div>
               )}
+
+              <div className="mt-4 pt-4 border-t border-white/10">
+                <div className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/5 p-2">
+                  <span className="px-2 text-sm font-medium text-white/70">
+                    Language
+                  </span>
+                  <div className="flex items-center rounded-full border border-white/15 overflow-hidden text-xs font-semibold">
+                    <button
+                      type="button"
+                      onClick={() => setLang("en")}
+                      className={`px-4 py-2 transition-colors ${
+                        lang === "en"
+                          ? "bg-primary text-primary-foreground"
+                          : "text-white/70 hover:text-white"
+                      }`}
+                    >
+                      EN
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setLang("fr")}
+                      className={`px-4 py-2 transition-colors ${
+                        lang === "fr"
+                          ? "bg-primary text-primary-foreground"
+                          : "text-white/70 hover:text-white"
+                      }`}
+                    >
+                      FR
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </motion.div>
         )}

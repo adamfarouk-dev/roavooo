@@ -119,7 +119,7 @@ export function PlaceCard({
           <button
             onClick={handleFavoriteClick}
             disabled={loading || favoriteBusy}
-            className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-md transition-all duration-200 z-10 ${
+            className={`absolute top-3 right-3 min-h-10 min-w-10 p-2 rounded-full backdrop-blur-md transition-all duration-200 z-10 ${
               isFav
                 ? "bg-primary/20 border border-primary/40"
                 : "bg-black/40 border border-white/20 hover:bg-black/60"
@@ -145,7 +145,7 @@ export function PlaceCard({
           </button>
         </div>
 
-        <div className="flex flex-col flex-grow p-5">
+        <div className="flex flex-col flex-grow p-4 sm:p-5">
           <div className="flex items-start justify-between gap-3 mb-2">
             <Link
               href={`/place/${place.id}`}
@@ -212,7 +212,7 @@ export function PlaceCard({
               <button
                 type="button"
                 onClick={handleSaveToTripClick}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-muted active:scale-[0.98] transition-all"
+                className="w-full inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-3 text-sm font-semibold text-foreground hover:bg-muted active:scale-[0.98] transition-all"
               >
                 <FolderPlus className="w-4 h-4" />
                 {t.card.saveToTrip}

@@ -305,7 +305,7 @@ export function Profile() {
 
   if (loading) {
     return (
-      <div className="p-6 max-w-5xl mx-auto">
+      <div className="p-4 sm:p-6 max-w-5xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="rounded-3xl border border-border bg-card p-6">
             <Skeleton className="w-20 h-20 rounded-full mb-5" />
@@ -339,8 +339,8 @@ export function Profile() {
 
   if (!user) {
     return (
-      <div className="p-6 max-w-4xl mx-auto">
-        <div className="rounded-3xl border border-border bg-card p-8 md:p-10 text-center">
+      <div className="p-4 sm:p-6 max-w-4xl mx-auto">
+        <div className="rounded-3xl border border-border bg-card p-6 md:p-10 text-center">
           <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-5">
             <User className="w-8 h-8 text-muted-foreground" />
           </div>
@@ -348,12 +348,12 @@ export function Profile() {
           <h1 className="text-3xl font-bold mb-3">{t.profile.title}</h1>
           <p className="text-muted-foreground mb-8">{t.profile.subtitle}</p>
 
-          <div className="flex items-center justify-center gap-3">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link href="/login">
-              <Button>{t.profile.logIn}</Button>
+              <Button className="w-full sm:w-auto">{t.profile.logIn}</Button>
             </Link>
             <Link href="/signup">
-              <Button variant="outline">{t.profile.signUp}</Button>
+              <Button variant="outline" className="w-full sm:w-auto">{t.profile.signUp}</Button>
             </Link>
           </div>
         </div>
@@ -372,11 +372,11 @@ export function Profile() {
     : t.profile.unknownDate;
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-5xl mx-auto">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1">
-          <div className="rounded-3xl border border-border bg-card p-6">
-            <div className="mb-5">
+          <div className="rounded-3xl border border-border bg-card p-5 sm:p-6">
+            <div className="mb-5 flex flex-col items-center text-center lg:items-start lg:text-left">
               <label className="relative block w-20 h-20 cursor-pointer group">
                 {profile?.avatar_url ? (
                   <SafeImage
@@ -448,7 +448,7 @@ export function Profile() {
                   <span className="break-all">{user.email}</span>
                 </div>
 
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <Button onClick={handleSaveUsername} disabled={saving}>
                     <Save className="w-4 h-4 mr-2" />
                     {saving ? t.profile.saving : t.profile.save}
@@ -465,7 +465,7 @@ export function Profile() {
         </div>
 
         <div className="lg:col-span-2 space-y-6">
-          <div className="rounded-3xl border border-border bg-card p-6">
+          <div className="rounded-3xl border border-border bg-card p-5 sm:p-6">
             <h2 className="text-xl font-semibold mb-5">{t.profile.overview}</h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -491,7 +491,7 @@ export function Profile() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-border bg-card p-6">
+          <div className="rounded-3xl border border-border bg-card p-5 sm:p-6">
             <h2 className="text-xl font-semibold mb-5">{t.profile.quickAccess}</h2>
 
             <div className="space-y-3">

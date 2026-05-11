@@ -231,21 +231,21 @@ export function Search() {
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="mb-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        <div className="mb-8 md:mb-12">
           <div className="h-10 w-64 bg-muted rounded mb-4 animate-pulse" />
           <div className="h-6 w-96 max-w-full bg-muted rounded animate-pulse" />
         </div>
 
-        <div className="bg-card p-6 rounded-2xl border border-border shadow-sm mb-12">
+        <div className="bg-card p-4 md:p-6 rounded-2xl border border-border shadow-sm mb-8 md:mb-12">
           <div className="h-14 w-full bg-muted rounded-xl animate-pulse mb-4" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
             <div className="h-14 bg-muted rounded-xl animate-pulse" />
             <div className="h-14 bg-muted rounded-xl animate-pulse" />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-8">
           {[1, 2, 3, 4, 5, 6].map((item) => (
             <div
               key={item}
@@ -266,15 +266,15 @@ export function Search() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="mb-12">
-        <h1 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-4">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+      <div className="mb-8 md:mb-12">
+        <h1 className="text-3xl md:text-5xl font-serif font-bold text-foreground mb-3 md:mb-4">
           {t.search.title}
         </h1>
-        <p className="text-xl text-muted-foreground">{t.search.subtitle}</p>
+        <p className="text-base md:text-xl text-muted-foreground">{t.search.subtitle}</p>
       </div>
 
-      <div className="bg-card p-6 rounded-2xl border border-border shadow-sm mb-12">
+      <div className="bg-card p-4 md:p-6 rounded-2xl border border-border shadow-sm mb-8 md:mb-12">
         <div className="relative mb-4">
           <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <Input
@@ -286,16 +286,16 @@ export function Search() {
               setSearchQuery(nextValue);
               updateUrlParams({ nextQuery: nextValue });
             }}
-            className="pl-12 py-6 rounded-xl text-lg bg-muted/50 border-none focus-visible:ring-1 focus-visible:ring-primary"
+            className="pl-12 py-6 rounded-xl text-base md:text-lg bg-muted/50 border-none focus-visible:ring-1 focus-visible:ring-primary"
           />
         </div>
 
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-2 mb-3 md:mb-4">
           <SlidersHorizontal className="w-4 h-4 text-muted-foreground" />
           <span className="text-sm text-muted-foreground">Filters</span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3 md:gap-4">
           <Select
             value={cityFilter}
             onValueChange={(value) => {
@@ -396,7 +396,7 @@ export function Search() {
           priceFilter !== "all" ||
           sortFilter !== "recommended") && (
           <div className="mt-4">
-            <Button variant="outline" onClick={clearFilters}>
+            <Button variant="outline" onClick={clearFilters} className="w-full sm:w-auto">
               <X className="w-4 h-4 mr-2" />
               {t.search.clearFilters}
             </Button>
@@ -404,15 +404,15 @@ export function Search() {
         )}
       </div>
 
-      <div className="mb-8 flex justify-between items-center gap-4 flex-wrap">
-        <h2 className="text-2xl font-serif font-semibold">
+      <div className="mb-6 md:mb-8 flex justify-between items-center gap-4 flex-wrap">
+        <h2 className="text-xl md:text-2xl font-serif font-semibold">
           {mappedPlaces.length} {resultLabel} {t.search.found}
         </h2>
       </div>
 
       {mappedPlaces.length === 0 ? (
-        <div className="text-center py-24 bg-muted/20 rounded-2xl border border-dashed border-border">
-          <h3 className="text-2xl font-serif font-semibold mb-2">
+        <div className="text-center py-16 md:py-24 px-5 bg-muted/20 rounded-2xl border border-dashed border-border">
+          <h3 className="text-xl md:text-2xl font-serif font-semibold mb-2">
             {t.search.noResultsTitle}
           </h3>
           <p className="text-muted-foreground mb-6">{t.search.noResultsMsg}</p>
@@ -421,7 +421,7 @@ export function Search() {
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-8">
           {mappedPlaces.map((place) => (
           <PlaceCard key={place.id} place={place} showSaveToTrip />
         ))}

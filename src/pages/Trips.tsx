@@ -279,10 +279,10 @@ export function Trips() {
 
   if (!authChecked || loading) {
     return (
-      <div className="p-6 max-w-6xl mx-auto">
+      <div className="p-4 sm:p-6 max-w-6xl mx-auto">
         <PageHeaderSkeleton />
         <TripGridSkeleton />
-        <div className="rounded-3xl border border-border bg-card p-5 md:p-6">
+        <div className="rounded-3xl border border-border bg-card p-4 sm:p-5 md:p-6">
           <div className="flex items-center gap-2 mb-5">
             <Skeleton className="h-5 w-5 rounded-full" />
             <Skeleton className="h-6 w-40" />
@@ -302,7 +302,7 @@ export function Trips() {
 
   if (!isLoggedIn) {
     return (
-      <div className="min-h-[70vh] max-w-4xl mx-auto px-4 py-16 flex items-center justify-center">
+      <div className="min-h-[70vh] max-w-4xl mx-auto px-4 py-10 md:py-16 flex items-center justify-center">
         <div className="w-full rounded-3xl border border-border bg-card p-8 md:p-10 text-center shadow-sm">
           <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-5">
             <Lock className="w-8 h-8 text-primary" />
@@ -316,15 +316,15 @@ export function Trips() {
             {t.profile.subtitle}
           </p>
 
-          <div className="flex justify-center gap-3">
+          <div className="flex flex-col sm:flex-row justify-center gap-3">
             <Link href="/login">
-              <button className="px-5 py-3 bg-primary text-white rounded-xl font-semibold hover:opacity-90 active:scale-[0.98] transition-all">
+              <button className="w-full sm:w-auto px-5 py-3 bg-primary text-white rounded-xl font-semibold hover:opacity-90 active:scale-[0.98] transition-all">
                 {t.profile.logIn}
               </button>
             </Link>
 
             <Link href="/signup">
-              <button className="px-5 py-3 border border-border rounded-xl font-semibold hover:bg-muted active:scale-[0.98] transition-all">
+              <button className="w-full sm:w-auto px-5 py-3 border border-border rounded-xl font-semibold hover:bg-muted active:scale-[0.98] transition-all">
                 {t.profile.signUp}
               </button>
             </Link>
@@ -335,14 +335,14 @@ export function Trips() {
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="mb-8">
+    <div className="p-4 sm:p-6 max-w-6xl mx-auto">
+      <div className="mb-6 md:mb-8">
         <h1 className="text-3xl font-bold mb-2">{t.trips.title}</h1>
         <p className="text-muted-foreground">{t.trips.subtitle}</p>
       </div>
 
       {trips.length === 0 ? (
-        <div className="rounded-3xl border border-border bg-card p-8 md:p-10 mb-8 text-center shadow-sm">
+        <div className="rounded-3xl border border-border bg-card p-6 md:p-10 mb-8 text-center shadow-sm">
           <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-5">
             <Plane className="w-8 h-8 text-primary" />
           </div>
@@ -363,7 +363,7 @@ export function Trips() {
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6 mb-10">
           {trips.map((trip) => {
             const city = trip.city_id ? cityMap[trip.city_id] : null;
             const placesCount = tripPlaceCounts[trip.id] || 0;
@@ -419,7 +419,7 @@ export function Trips() {
                   </div>
                 </div>
 
-                <div className="p-5">
+                <div className="p-4 sm:p-5">
                   {(trip.start_date || trip.end_date) && (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
                       <CalendarDays className="w-4 h-4 text-primary" />
@@ -456,7 +456,7 @@ export function Trips() {
         </div>
       )}
 
-      <div className="rounded-3xl border border-border bg-card p-5 md:p-6 shadow-sm">
+      <div className="rounded-3xl border border-border bg-card p-4 sm:p-5 md:p-6 shadow-sm">
         <div className="flex items-center gap-2 mb-5">
           <Plus className="w-5 h-5 text-primary" />
           <h2 className="text-xl font-semibold">{t.trips.createNewTrip}</h2>
@@ -515,7 +515,7 @@ export function Trips() {
         <button
           onClick={handleCreateTrip}
           disabled={creating}
-          className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-primary text-white rounded-xl font-semibold hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed active:scale-[0.98] transition-all"
+          className="inline-flex w-full sm:w-auto items-center justify-center gap-2 px-5 py-3 bg-primary text-white rounded-xl font-semibold hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed active:scale-[0.98] transition-all"
           type="button"
         >
           {creating && <Loader2 className="w-4 h-4 animate-spin" />}
