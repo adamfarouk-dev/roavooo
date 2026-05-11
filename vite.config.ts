@@ -15,6 +15,23 @@ export default defineConfig({
   build: {
     outDir: "dist",
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          "app-vendor": [
+            "react",
+            "react-dom",
+            "wouter",
+            "@radix-ui/react-alert-dialog",
+            "@radix-ui/react-select",
+            "lucide-react",
+            "framer-motion",
+            "@tanstack/react-query",
+          ],
+          "supabase-vendor": ["@supabase/supabase-js"],
+        },
+      },
+    },
   },
   server: {
     port: 5173,
