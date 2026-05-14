@@ -39,6 +39,8 @@ type DbPlace = {
   location: string | null;
   rating: number;
   price_per_night: number | null;
+  estimated_cost: number | null;
+  estimated_cost_per_person: number | null;
   price_range: string | null;
   cuisine: string | null;
 };
@@ -202,6 +204,11 @@ export function Place() {
     translatedPlace?.description ??
     (lang === "fr" ? dbPlace.description_fr : dbPlace.description_en);
   const details = translatedPlace?.details ?? [];
+  const showNightlyPrice =
+    dbPlace.category === "stay" && dbPlace.price_per_night != null;
+  const showPriceRange =
+    (dbPlace.category === "stay" || dbPlace.category === "restaurant") &&
+    Boolean(dbPlace.price_range);
 
   return (
     <div className="w-full bg-background pb-24">
@@ -293,7 +300,7 @@ export function Place() {
         <div className="lg:col-span-4">
           <div className="sticky top-28 bg-card border border-border rounded-3xl p-8 shadow-xl">
             <div className="mb-6 pb-6 border-b border-border">
-              {dbPlace.price_per_night && (
+              {showNightlyPrice && (
                 <div>
                   <span className="text-3xl font-bold text-foreground">
                     {dbPlace.price_per_night} MAD
@@ -304,7 +311,7 @@ export function Place() {
                 </div>
               )}
 
-              {dbPlace.price_range && (
+              {showPriceRange && (
                 <div className="flex justify-between items-center">
                   <span className="text-lg font-medium text-muted-foreground">
                     {t.place.priceRange}

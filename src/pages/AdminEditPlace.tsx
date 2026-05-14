@@ -9,6 +9,8 @@ type DbCity = {
   name: string;
 };
 
+type PlaceCategory = "stay" | "activity" | "restaurant";
+
 export function AdminEditPlace() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
@@ -28,6 +30,8 @@ export function AdminEditPlace() {
     location: "",
     rating: "4.5",
     price_per_night: "",
+    estimated_cost: "",
+    estimated_cost_per_person: "",
     price_range: "",
     cuisine: "",
   });
@@ -84,6 +88,12 @@ export function AdminEditPlace() {
         location: placeData.location ?? "",
         rating: String(placeData.rating ?? "4.5"),
         price_per_night: placeData.price_per_night ? String(placeData.price_per_night) : "",
+        estimated_cost: placeData.estimated_cost
+          ? String(placeData.estimated_cost)
+          : "",
+        estimated_cost_per_person: placeData.estimated_cost_per_person
+          ? String(placeData.estimated_cost_per_person)
+          : "",
         price_range: placeData.price_range ?? "",
         cuisine: placeData.cuisine ?? "",
       });
@@ -97,6 +107,17 @@ export function AdminEditPlace() {
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
+    if (e.target.name === "category") {
+      setForm((prev) => ({
+        ...prev,
+        category: e.target.value as PlaceCategory,
+        price_per_night: "",
+        estimated_cost: "",
+        estimated_cost_per_person: "",
+      }));
+      return;
+    }
+
     setForm((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
@@ -142,16 +163,29 @@ export function AdminEditPlace() {
       return;
     }
 
+    const category = form.category as PlaceCategory;
+
     const payload = {
       city_id: form.city_id,
       name: form.name,
-      category: form.category,
+      category,
       description_en: form.description_en,
       description_fr: form.description_fr,
       image_url: form.image_url,
       location: form.location || null,
       rating: Number(form.rating),
-      price_per_night: form.price_per_night ? Number(form.price_per_night) : null,
+      price_per_night:
+        category === "stay" && form.price_per_night
+          ? Number(form.price_per_night)
+          : null,
+      estimated_cost:
+        category === "activity" && form.estimated_cost
+          ? Number(form.estimated_cost)
+          : null,
+      estimated_cost_per_person:
+        category === "restaurant" && form.estimated_cost_per_person
+          ? Number(form.estimated_cost_per_person)
+          : null,
       price_range: form.price_range || null,
       cuisine: form.cuisine || null,
     };
@@ -274,13 +308,35 @@ export function AdminEditPlace() {
             required
           />
 
-          <input
-            name="price_per_night"
-            placeholder="Price per night"
-            value={form.price_per_night}
-            onChange={handleChange}
-            className="w-full p-3 rounded-lg bg-muted"
-          />
+          {form.category === "stay" && (
+            <input
+              name="price_per_night"
+              placeholder="Price per night (MAD)"
+              value={form.price_per_night}
+              onChange={handleChange}
+              className="w-full p-3 rounded-lg bg-muted"
+            />
+          )}
+
+          {form.category === "activity" && (
+            <input
+              name="estimated_cost"
+              placeholder="Estimated Cost (MAD)"
+              value={form.estimated_cost}
+              onChange={handleChange}
+              className="w-full p-3 rounded-lg bg-muted"
+            />
+          )}
+
+          {form.category === "restaurant" && (
+            <input
+              name="estimated_cost_per_person"
+              placeholder="Estimated Cost Per Person (MAD)"
+              value={form.estimated_cost_per_person}
+              onChange={handleChange}
+              className="w-full p-3 rounded-lg bg-muted"
+            />
+          )}
 
           <input
             name="price_range"

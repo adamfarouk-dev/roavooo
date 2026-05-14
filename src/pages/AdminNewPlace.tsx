@@ -9,6 +9,8 @@ type DbCity = {
   name: string;
 };
 
+type PlaceCategory = "stay" | "activity" | "restaurant";
+
 export function AdminNewPlace() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -26,6 +28,8 @@ export function AdminNewPlace() {
     location: "",
     rating: "4.5",
     price_per_night: "",
+    estimated_cost: "",
+    estimated_cost_per_person: "",
     price_range: "",
     cuisine: "",
   });
@@ -50,6 +54,17 @@ export function AdminNewPlace() {
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
+    if (e.target.name === "category") {
+      setForm((prev) => ({
+        ...prev,
+        category: e.target.value as PlaceCategory,
+        price_per_night: "",
+        estimated_cost: "",
+        estimated_cost_per_person: "",
+      }));
+      return;
+    }
+
     setForm((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
@@ -96,17 +111,31 @@ export function AdminNewPlace() {
       return;
     }
 
+    const category = form.category as PlaceCategory;
+
     const payload = {
       id: form.id,
       city_id: form.city_id,
       name: form.name,
-      category: form.category,
+      category,
       description_en: form.description_en,
       description_fr: form.description_fr,
       image_url: form.image_url,
       location: form.location || null,
       rating: Number(form.rating),
-      price_per_night: form.price_per_night ? Number(form.price_per_night) : null,
+      ...(category === "stay" && form.price_per_night
+        ? { price_per_night: Number(form.price_per_night) }
+        : {}),
+      ...(category === "activity" && form.estimated_cost
+        ? { estimated_cost: Number(form.estimated_cost) }
+        : {}),
+      ...(category === "restaurant" && form.estimated_cost_per_person
+        ? {
+            estimated_cost_per_person: Number(
+              form.estimated_cost_per_person
+            ),
+          }
+        : {}),
       price_range: form.price_range || null,
       cuisine: form.cuisine || null,
     };
@@ -226,13 +255,35 @@ export function AdminNewPlace() {
             required
           />
 
-          <input
-            name="price_per_night"
-            placeholder="Price per night"
-            value={form.price_per_night}
-            onChange={handleChange}
-            className="w-full p-3 rounded-lg bg-muted"
-          />
+          {form.category === "stay" && (
+            <input
+              name="price_per_night"
+              placeholder="Price per night (MAD)"
+              value={form.price_per_night}
+              onChange={handleChange}
+              className="w-full p-3 rounded-lg bg-muted"
+            />
+          )}
+
+          {form.category === "activity" && (
+            <input
+              name="estimated_cost"
+              placeholder="Estimated Cost (MAD)"
+              value={form.estimated_cost}
+              onChange={handleChange}
+              className="w-full p-3 rounded-lg bg-muted"
+            />
+          )}
+
+          {form.category === "restaurant" && (
+            <input
+              name="estimated_cost_per_person"
+              placeholder="Estimated Cost Per Person (MAD)"
+              value={form.estimated_cost_per_person}
+              onChange={handleChange}
+              className="w-full p-3 rounded-lg bg-muted"
+            />
+          )}
 
           <input
             name="price_range"

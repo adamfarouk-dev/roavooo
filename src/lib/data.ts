@@ -7,6 +7,8 @@ export interface Place {
   category: Category;
   priceRange?: string;
   pricePerNight?: number;
+  estimatedCost?: number;
+  estimatedCostPerPerson?: number;
   rating: number;
   description: string;
   imageUrl: string;

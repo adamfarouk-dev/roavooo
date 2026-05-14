@@ -58,6 +58,8 @@ type PlaceInfo = {
   location: string | null;
   category: "stay" | "activity" | "restaurant";
   price_per_night: number | null;
+  estimated_cost: number | null;
+  estimated_cost_per_person: number | null;
   price_range: string | null;
 };
 
@@ -73,31 +75,6 @@ type TripPlaceRow = {
   place_id: string;
   note: string | null;
   place: PlaceInfo | null;
-};
-
-const CATEGORY_BUDGET_ESTIMATES: Record<PlaceInfo["category"], number> = {
-  stay: 700,
-  activity: 300,
-  restaurant: 200,
-};
-
-const PRICE_RANGE_BUDGET_ESTIMATES: Record<string, number> = {
-  $: 100,
-  $$: 250,
-  $$$: 500,
-  $$$$: 800,
-};
-
-const estimatePlaceBudget = (place: PlaceInfo) => {
-  if (place.category === "stay" && typeof place.price_per_night === "number") {
-    return place.price_per_night;
-  }
-
-  const rangeEstimate = place.price_range
-    ? PRICE_RANGE_BUDGET_ESTIMATES[place.price_range.trim()]
-    : undefined;
-
-  return rangeEstimate ?? CATEGORY_BUDGET_ESTIMATES[place.category];
 };
 
 const formatMad = (value: number) => `${Math.round(value).toLocaleString()} MAD`;
@@ -147,22 +124,33 @@ export function TripDetails() {
     return places.filter((item) => (item.note || "").trim().length > 0).length;
   }, [places]);
 
+  const tripNights = useMemo(() => {
+    if (!trip?.start_date || !trip.end_date) return 0;
+
+    const start = new Date(trip.start_date);
+    const end = new Date(trip.end_date);
+    const millisecondsPerDay = 1000 * 60 * 60 * 24;
+    const nights = Math.round(
+      (end.getTime() - start.getTime()) / millisecondsPerDay
+    );
+
+    return Math.max(0, nights);
+  }, [trip?.start_date, trip?.end_date]);
+
   const budgetSummary = useMemo(() => {
     return places.reduce(
       (totals, item) => {
         if (!item.place) return totals;
 
-        const estimate = estimatePlaceBudget(item.place);
-
         if (item.place.category === "stay") {
-          totals.stays += estimate;
+          totals.stays += (item.place.price_per_night ?? 0) * tripNights;
         } else if (item.place.category === "activity") {
-          totals.activities += estimate;
+          totals.activities += item.place.estimated_cost ?? 0;
         } else {
-          totals.dining += estimate;
+          totals.dining += item.place.estimated_cost_per_person ?? 0;
         }
 
-        totals.overall += estimate;
+        totals.overall = totals.stays + totals.activities + totals.dining;
         return totals;
       },
       {
@@ -172,7 +160,7 @@ export function TripDetails() {
         overall: 0,
       }
     );
-  }, [places]);
+  }, [places, tripNights]);
 
   const clearSavedNoteTimer = () => {
     if (savedNoteTimeoutRef.current) {
@@ -224,6 +212,8 @@ export function TripDetails() {
             location,
             category,
             price_per_night,
+            estimated_cost,
+            estimated_cost_per_person,
             price_range
           )
         `
@@ -961,15 +951,15 @@ export function TripDetails() {
         <div className="rounded-2xl border border-border bg-card p-5 md:p-6 mb-8">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-5">
             <div>
-              <h2 className="text-xl font-semibold">Estimated budget</h2>
+              <h2 className="text-xl font-semibold">Trip budget</h2>
               <p className="text-sm text-muted-foreground mt-1">
-                Based on saved places and available pricing.
+                Based only on numeric MAD pricing saved for this trip.
               </p>
             </div>
 
             <div className="md:text-right">
               <p className="text-sm text-muted-foreground">
-                Overall estimated total
+                Total (MAD)
               </p>
               <p className="text-3xl font-bold text-primary">
                 {formatMad(budgetSummary.overall)}
@@ -981,7 +971,7 @@ export function TripDetails() {
             <div className="rounded-xl bg-muted p-4">
               <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
                 <Bed className="w-4 h-4 text-primary" />
-                <span>Stays total</span>
+                <span>Stay cost (MAD exact)</span>
               </div>
               <p className="text-2xl font-semibold">
                 {formatMad(budgetSummary.stays)}
@@ -991,7 +981,7 @@ export function TripDetails() {
             <div className="rounded-xl bg-muted p-4">
               <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
                 <Compass className="w-4 h-4 text-primary" />
-                <span>Activities total</span>
+                <span>Activities (estimated cost)</span>
               </div>
               <p className="text-2xl font-semibold">
                 {formatMad(budgetSummary.activities)}
@@ -1001,7 +991,7 @@ export function TripDetails() {
             <div className="rounded-xl bg-muted p-4">
               <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
                 <Utensils className="w-4 h-4 text-primary" />
-                <span>Dining total</span>
+                <span>Dining (estimated cost per person)</span>
               </div>
               <p className="text-2xl font-semibold">
                 {formatMad(budgetSummary.dining)}
@@ -1010,8 +1000,9 @@ export function TripDetails() {
           </div>
 
           <p className="text-xs text-muted-foreground mt-4">
-            Exact stay prices use price per night. Other missing prices are
-            estimated from price range first, then a simple category default.
+            Stay cost is price per night multiplied by {tripNights}{" "}
+            {tripNights === 1 ? "night" : "nights"}. Price range labels are
+            visual only and are never used for budget calculations.
           </p>
         </div>
       )}

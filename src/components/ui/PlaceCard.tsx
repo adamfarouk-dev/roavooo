@@ -29,6 +29,11 @@ export function PlaceCard({
   const translatedPlace =
     t.place.content?.[place.id as keyof typeof t.place.content];
   const description = translatedPlace?.description ?? place.description;
+  const showNightlyPrice =
+    place.category === "stay" && place.pricePerNight != null;
+  const showPriceRange =
+    (place.category === "stay" || place.category === "restaurant") &&
+    Boolean(place.priceRange);
 
   const trackPlaceClick = async () => {
     try {
@@ -176,8 +181,8 @@ export function PlaceCard({
 
           <div className="pt-4 border-t border-border/50 mt-auto space-y-3">
             <div className="flex items-center justify-between">
-              <div>
-                {place.pricePerNight && (
+              <div className="flex flex-wrap items-center gap-2">
+                {showNightlyPrice && (
                   <span className="font-bold text-foreground text-sm">
                     {place.pricePerNight} MAD
                     <span className="text-muted-foreground text-xs font-normal ml-1">
@@ -186,13 +191,13 @@ export function PlaceCard({
                   </span>
                 )}
 
-                {place.priceRange && (
-                  <span className="font-bold text-primary text-sm">
+                {showPriceRange && (
+                  <span className="inline-flex rounded-full bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">
                     {place.priceRange}
                   </span>
                 )}
 
-                {!place.pricePerNight && !place.priceRange && (
+                {!showNightlyPrice && !showPriceRange && (
                   <span className="text-xs text-muted-foreground">
                     {t.card.freeToExplore}
                   </span>
